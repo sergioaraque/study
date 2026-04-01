@@ -111,13 +111,11 @@
 <script setup lang="ts">
 import { ref, computed, onMounted, watch } from 'vue'
 import { useSemesterStore } from '@/stores/semester'
-import { useSubjectStore } from '@/stores/subject'
 import { useTopicStore } from '@/stores/topic'
 import { studySessionCol, subjectCol } from '@/lib/collections'
 import type { Subject, StudySession } from '@/types'
 
 const semesterStore = useSemesterStore()
-const subjectStore = useSubjectStore()
 const topicStore = useTopicStore()
 
 const loading = ref(false)

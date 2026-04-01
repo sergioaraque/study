@@ -1,11 +1,5 @@
 import type { Exam, Pec } from '@/types'
 
-function icsDate(dateStr: string): string {
-  // dateStr is ISO datetime from Appwrite or "YYYY-MM-DD"
-  const d = new Date(dateStr)
-  return d.toISOString().replace(/[-:]/g, '').split('.')[0] + 'Z'
-}
-
 function icsDateOnly(dateStr: string): string {
   return dateStr.slice(0, 10).replace(/-/g, '')
 }

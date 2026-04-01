@@ -4,7 +4,7 @@
       <h2 class="text-sm font-semibold text-[var(--color-text)]">PECs</h2>
       <div class="flex items-center gap-2">
         <button v-if="pecs.length" @click="exportICS" class="btn-secondary flex items-center gap-1 text-xs">
-          <CalendarDown :size="13" /> Exportar .ics
+          <Calendar :size="13" /> Exportar .ics
         </button>
         <button @click="showForm = true" class="btn-primary flex items-center gap-1">
           <Plus :size="14" /> Nueva PEC
@@ -44,7 +44,7 @@
 
 <script setup lang="ts">
 import { ref, computed, onMounted } from 'vue'
-import { Plus, CalendarDown } from 'lucide-vue-next'
+import { Plus, Calendar } from 'lucide-vue-next'
 import { usePecStore } from '@/stores/pec'
 import { generatePecsICS, downloadICS } from '@/lib/ics'
 import PecItem from './PecItem.vue'

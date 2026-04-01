@@ -16,7 +16,7 @@
       <p class="text-sm font-semibold" :class="isToday ? 'text-[var(--color-primary)]' : 'text-[var(--color-text)]'">
         {{ dayNumber }}
       </p>
-      <p v-if="availableHours > 0" class="text-xs mt-0.5" :class="overloaded ? 'text-[var(--color-error)]' : 'text-[var(--color-text-muted)]'">
+      <p v-if="(availableHours ?? 0) > 0" class="text-xs mt-0.5" :class="overloaded ? 'text-[var(--color-error)]' : 'text-[var(--color-text-muted)]'">
         {{ plannedHours }}h/{{ availableHours }}h
       </p>
       <!-- Overdue badge (Option B) -->

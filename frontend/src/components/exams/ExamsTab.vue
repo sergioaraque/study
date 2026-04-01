@@ -4,7 +4,7 @@
       <h2 class="text-sm font-semibold text-[var(--color-text)]">Exámenes</h2>
       <div class="flex items-center gap-2">
         <button v-if="exams.length" @click="exportICS" class="btn-secondary flex items-center gap-1 text-xs">
-          <CalendarDown :size="13" /> Exportar .ics
+          <Calendar :size="13" /> Exportar .ics
         </button>
         <button v-if="!exams.length" @click="showForm = true" class="btn-primary flex items-center gap-1">
           <Plus :size="14" /> Añadir examen
@@ -41,7 +41,7 @@
 
 <script setup lang="ts">
 import { ref, computed, onMounted } from 'vue'
-import { Plus, CalendarDown } from 'lucide-vue-next'
+import { Plus, Calendar } from 'lucide-vue-next'
 import { useExamStore } from '@/stores/exam'
 import { generateExamsICS, downloadICS } from '@/lib/ics'
 import ExamCard from './ExamCard.vue'
