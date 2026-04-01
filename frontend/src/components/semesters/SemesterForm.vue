@@ -38,7 +38,7 @@
         Horario de estudio
         <span class="text-xs text-[var(--color-text-muted)] font-normal ml-1">(horas disponibles por día)</span>
       </p>
-      <WeeklyScheduleEditor v-model="schedule" />
+      <WeeklyScheduleEditor :model-value="schedule" @update:model-value="val => Object.assign(schedule, val)" />
     </div>
 
     <div>

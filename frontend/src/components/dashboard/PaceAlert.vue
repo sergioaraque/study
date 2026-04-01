@@ -6,10 +6,7 @@
     <!-- Header -->
     <div class="flex items-start gap-3">
       <div class="mt-0.5 shrink-0 rounded-full bg-[var(--color-warning)]/20 p-1.5">
-        <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 text-[var(--color-warning)]" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-          <path d="M10.29 3.86 1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/>
-          <line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/>
-        </svg>
+        <AlertTriangle class="h-4 w-4 text-[var(--color-warning)]" :size="16" />
       </div>
       <div class="flex-1 min-w-0">
         <p class="text-sm font-semibold text-[var(--color-text)]">Ritmo de estudio por debajo del semestre</p>
@@ -65,6 +62,7 @@
 
 <script setup lang="ts">
 import { computed } from 'vue'
+import { AlertTriangle } from 'lucide-vue-next'
 import { differenceInDays, parseISO, isAfter, isBefore } from 'date-fns'
 import { useSemesterStore } from '@/stores/semester'
 import { useTopicStore } from '@/stores/topic'

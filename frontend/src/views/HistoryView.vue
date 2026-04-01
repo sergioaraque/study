@@ -61,7 +61,7 @@
 <script setup lang="ts">
 import { ref, computed, onMounted } from 'vue'
 import { History, ChevronDown } from 'lucide-vue-next'
-import { format } from 'date-fns'
+import { format, parseISO } from 'date-fns'
 import { es } from 'date-fns/locale'
 import { useSemesterStore } from '@/stores/semester'
 import { subjectCol } from '@/lib/collections'
@@ -79,7 +79,7 @@ const archivedSemesters = computed(() =>
 onMounted(() => semesterStore.fetchAll())
 
 function formatDate(d: string) {
-  return format(new Date(d), "MMM yyyy", { locale: es })
+  return format(parseISO(d), "MMM yyyy", { locale: es })
 }
 
 async function toggleSemester(id: string) {

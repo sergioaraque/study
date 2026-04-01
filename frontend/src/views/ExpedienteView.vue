@@ -222,7 +222,7 @@
             <div class="relative shrink-0">
               <select
                 class="text-xs bg-transparent border border-[var(--color-border)] rounded-lg px-2 py-1 text-[var(--color-text-muted)] cursor-pointer hover:border-[var(--color-primary)] outline-none appearance-none pr-6"
-                @change="onLinkSemester(subject.$id, ($event.target as HTMLSelectElement).value)"
+                @change="onLinkSemester(subject.$id, $event)"
               >
                 <option value="">Matricular en…</option>
                 <option v-for="sem in semesterStore.semesters" :key="sem.$id" :value="sem.$id">
@@ -433,11 +433,14 @@ async function doChangeSemester(subjectId: string, semesterId: string) {
   changeSemesterTarget.value = null
 }
 
-async function onLinkSemester(subjectId: string, semesterId: string) {
+async function onLinkSemester(subjectId: string, e: Event) {
+  const el = e.target as HTMLSelectElement
+  const semesterId = el.value
   if (!semesterId) return
   const updated = await subjectCol.update(subjectId, { semester_id: semesterId, status: 'activa' })
   const idx = allSubjects.value.findIndex((s) => s.$id === subjectId)
   if (idx !== -1) allSubjects.value[idx] = updated
+  el.value = ''
 }
 
 async function onImported() {

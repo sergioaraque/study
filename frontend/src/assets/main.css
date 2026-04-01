@@ -6,8 +6,10 @@
   --color-success: #22c55e;
   --color-warning: #eab308;
   --color-danger: #ef4444;
+  --color-error: #ef4444;
   --color-surface: #1e293b;
   --color-surface-2: #0f172a;
+  --color-surface-raised: #243044;
   --color-border: #334155;
   --color-text: #f1f5f9;
   --color-text-muted: #94a3b8;
@@ -24,9 +26,11 @@
 [data-theme="light"] {
   --color-surface: #f8fafc;
   --color-surface-2: #ffffff;
+  --color-surface-raised: #f1f5f9;
   --color-border: #e2e8f0;
   --color-text: #0f172a;
   --color-text-muted: #64748b;
+  --color-error: #dc2626;
   color-scheme: light;
 }
 

@@ -78,7 +78,7 @@
             <div class="relative shrink-0">
               <select
                 class="text-xs bg-transparent border border-[var(--color-border)] rounded-lg px-2 py-1 text-[var(--color-text-muted)] cursor-pointer hover:border-[var(--color-primary)] outline-none appearance-none pr-6"
-                @change="onLinkSemester(subject.$id, ($event.target as HTMLSelectElement).value)"
+                @change="onLinkSemester(subject.$id, $event)"
               >
                 <option value="">Vincular a semestre…</option>
                 <option
@@ -205,8 +205,11 @@ async function onImported() {
   await subjectStore.fetchLibrary()
 }
 
-async function onLinkSemester(subjectId: string, semesterId: string) {
+async function onLinkSemester(subjectId: string, e: Event) {
+  const el = e.target as HTMLSelectElement
+  const semesterId = el.value
   if (!semesterId) return
   await subjectStore.linkToSemester(subjectId, semesterId)
+  el.value = ''
 }
 </script>

@@ -139,7 +139,7 @@
           <p class="text-xs text-[var(--color-text-muted)] mb-4">
             Indica cuántas horas tienes disponibles para estudiar cada día. Se usará para calcular tu capacidad semanal.
           </p>
-          <WeeklyScheduleEditor v-model="editSchedule" />
+          <WeeklyScheduleEditor :model-value="editSchedule" @update:model-value="val => Object.assign(editSchedule, val)" />
           <div class="flex justify-end gap-2 mt-5">
             <button @click="showSchedule = false" class="btn-secondary text-sm">Cancelar</button>
             <button @click="saveSchedule" :disabled="saving" class="btn-primary text-sm">

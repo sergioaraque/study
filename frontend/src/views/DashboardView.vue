@@ -133,14 +133,13 @@ async function onSemesterSaved() {
 }
 
 onMounted(async () => {
-  await semesterStore.fetchAll()
-  await subjectStore.fetchActive()
-  for (const s of subjectStore.subjects) {
-    await topicStore.fetchBySubject(s.$id)
-  }
-  await pecStore.fetchUpcoming()
-  await examStore.fetchUpcoming()
-  await plannerStore.fetchWeek()
-  await sessionStore.fetchRecentDates()
+  await Promise.all([semesterStore.fetchAll(), subjectStore.fetchActive()])
+  await Promise.all([
+    ...subjectStore.subjects.map((s) => topicStore.fetchBySubject(s.$id)),
+    pecStore.fetchUpcoming(),
+    examStore.fetchUpcoming(),
+    plannerStore.fetchWeek(),
+    sessionStore.fetchRecentDates(),
+  ])
 })
 </script>
