@@ -3,10 +3,21 @@ services:
     build:
       context: ./frontend
       dockerfile: Dockerfile
+      args:
+        VITE_APPWRITE_ENDPOINT: ${VITE_APPWRITE_ENDPOINT}
+        VITE_APPWRITE_PROJECT_ID: ${VITE_APPWRITE_PROJECT_ID}
+        VITE_APPWRITE_DATABASE_ID: ${VITE_APPWRITE_DATABASE_ID}
+        VITE_COL_SEMESTERS: ${VITE_COL_SEMESTERS:-semesters}
+        VITE_COL_SUBJECTS: ${VITE_COL_SUBJECTS:-subjects}
+        VITE_COL_TOPICS: ${VITE_COL_TOPICS:-topics}
+        VITE_COL_STUDY_SESSIONS: ${VITE_COL_STUDY_SESSIONS:-study_sessions}
+        VITE_COL_PECS: ${VITE_COL_PECS:-pecs}
+        VITE_COL_EXAMS: ${VITE_COL_EXAMS:-exams}
+        VITE_COL_TUTORING_SESSIONS: ${VITE_COL_TUTORING_SESSIONS:-tutoring_sessions}
+        VITE_COL_TOPIC_TASKS: ${VITE_COL_TOPIC_TASKS:-topic_tasks}
+        VITE_BACKEND_URL: ${VITE_BACKEND_URL}
     ports:
       - "80:80"
-    env_file:
-      - ./frontend/.env
     depends_on:
       - backend
     restart: unless-stopped
@@ -17,8 +28,24 @@ services:
       dockerfile: Dockerfile
     ports:
       - "3001:3001"
-    env_file:
-      - ./backend/.env
+    environment:
+      PORT: ${PORT:-3001}
+      APPWRITE_ENDPOINT: ${APPWRITE_ENDPOINT}
+      APPWRITE_PROJECT_ID: ${APPWRITE_PROJECT_ID}
+      APPWRITE_API_KEY: ${APPWRITE_API_KEY}
+      APPWRITE_DATABASE_ID: ${APPWRITE_DATABASE_ID}
+      COL_SEMESTERS: ${COL_SEMESTERS:-semesters}
+      COL_SUBJECTS: ${COL_SUBJECTS:-subjects}
+      COL_TOPICS: ${COL_TOPICS:-topics}
+      COL_STUDY_SESSIONS: ${COL_STUDY_SESSIONS:-study_sessions}
+      COL_PECS: ${COL_PECS:-pecs}
+      COL_EXAMS: ${COL_EXAMS:-exams}
+      COL_TUTORING_SESSIONS: ${COL_TUTORING_SESSIONS:-tutoring_sessions}
+      COL_PUSH_SUBSCRIPTIONS: ${COL_PUSH_SUBSCRIPTIONS:-push_subscriptions}
+      VAPID_PUBLIC_KEY: ${VAPID_PUBLIC_KEY}
+      VAPID_PRIVATE_KEY: ${VAPID_PRIVATE_KEY}
+      VAPID_MAILTO: ${VAPID_MAILTO}
+      FRONTEND_URL: ${FRONTEND_URL}
     restart: unless-stopped
 
 networks:
