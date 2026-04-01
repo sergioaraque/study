@@ -16,8 +16,8 @@ services:
         VITE_COL_TUTORING_SESSIONS: ${VITE_COL_TUTORING_SESSIONS:-tutoring_sessions}
         VITE_COL_TOPIC_TASKS: ${VITE_COL_TOPIC_TASKS:-topic_tasks}
         VITE_BACKEND_URL: ${VITE_BACKEND_URL}
-    ports:
-      - "80:80"
+    expose:
+      - "80"
     depends_on:
       - backend
     restart: unless-stopped
@@ -26,8 +26,8 @@ services:
     build:
       context: ./backend
       dockerfile: Dockerfile
-    ports:
-      - "3001:3001"
+    expose:
+      - "3001"
     environment:
       PORT: ${PORT:-3001}
       APPWRITE_ENDPOINT: ${APPWRITE_ENDPOINT}
