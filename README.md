@@ -97,15 +97,6 @@ study/
 
 ---
 
-## Despliegue en producción (Coolify)
-
-1. Conecta el repositorio en Coolify como **Docker Compose**.
-2. Añade todas las variables de entorno en el panel "Environment Variables".
-3. Coolify inyecta las variables como `ARG` en el build del Dockerfile automáticamente.
-4. Asigna un dominio — Traefik gestiona el TLS de forma automática.
-
----
-
 ## Licencia
 
 MIT
