@@ -39,6 +39,7 @@
           :completed-count="completedCountFor(subject.$id)"
           @click="router.push(`/subjects/${subject.$id}`)"
           @edit="editSubject(subject)"
+          @delete="deleteSubject(subject)"
         />
       </div>
 
@@ -95,6 +96,13 @@
               title="Editar"
             >
               <Pencil :size="14" />
+            </button>
+            <button
+              @click="deleteSubject(subject)"
+              class="shrink-0 text-[var(--color-text-muted)] hover:text-[var(--color-error)] transition-colors"
+              title="Eliminar"
+            >
+              <Trash2 :size="14" />
             </button>
           </div>
         </div>
@@ -179,6 +187,11 @@ function editSubject(subject: Subject) {
 function closeForm() {
   showForm.value = false
   editingSubject.value = null
+}
+
+async function deleteSubject(subject: Subject) {
+  if (!confirm(`¿Eliminar "${subject.name}"? Se borrarán también todos sus temas y tareas.`)) return
+  await subjectStore.remove(subject.$id)
 }
 
 async function onSaved() {

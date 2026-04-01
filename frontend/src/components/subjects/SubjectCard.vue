@@ -17,6 +17,12 @@
         >
           <Pencil :size="12" />
         </button>
+        <button
+          @click.stop="$emit('delete')"
+          class="opacity-0 group-hover:opacity-100 p-1 rounded text-[var(--color-text-muted)] hover:text-[var(--color-error)] transition-opacity"
+        >
+          <Trash2 :size="12" />
+        </button>
         <SubjectStatusBadge :status="subject.status" />
       </div>
     </div>
@@ -41,7 +47,7 @@
 </template>
 
 <script setup lang="ts">
-import { Pencil } from 'lucide-vue-next'
+import { Pencil, Trash2 } from 'lucide-vue-next'
 import SubjectStatusBadge from './SubjectStatusBadge.vue'
 import BaseProgressBar from '@/components/ui/BaseProgressBar.vue'
 import type { Subject } from '@/types'
@@ -51,5 +57,5 @@ defineProps<{
   topicCount: number
   completedCount: number
 }>()
-defineEmits<{ click: []; edit: [] }>()
+defineEmits<{ click: []; edit: []; delete: [] }>()
 </script>
