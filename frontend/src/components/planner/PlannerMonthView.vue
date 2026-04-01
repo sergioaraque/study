@@ -1,0 +1,146 @@
+<template>
+  <div>
+    <!-- Day-of-week headers -->
+    <div class="grid grid-cols-7 mb-1">
+      <div
+        v-for="d in DAY_NAMES"
+        :key="d"
+        class="text-center text-xs font-medium text-[var(--color-text-muted)] uppercase tracking-wide py-1"
+      >
+        {{ d }}
+      </div>
+    </div>
+
+    <!-- Calendar grid -->
+    <div class="grid grid-cols-7 gap-1">
+      <div
+        v-for="day in planner.monthCalendarDays"
+        :key="format(day, 'yyyy-MM-dd')"
+        class="min-h-20 rounded-lg border p-1.5 transition-colors"
+        :class="[
+          isCurrentMonth(day) ? 'bg-[var(--color-surface)] border-[var(--color-border)]' : 'bg-transparent border-transparent opacity-40',
+          isToday(day) ? '!border-[var(--color-primary)]/50 !bg-[var(--color-primary)]/5' : '',
+          isDragOver === format(day, 'yyyy-MM-dd') ? '!border-[var(--color-primary)] !bg-[var(--color-primary)]/10' : '',
+        ]"
+        @dragover.prevent="isDragOver = format(day, 'yyyy-MM-dd')"
+        @dragleave="isDragOver = null"
+        @drop.prevent="onDrop(day)"
+      >
+        <!-- Day number + hours -->
+        <div class="flex items-center justify-between mb-1">
+          <span
+            class="text-xs font-medium w-5 h-5 flex items-center justify-center rounded-full"
+            :class="isToday(day)
+              ? 'bg-[var(--color-primary)] text-white'
+              : 'text-[var(--color-text-muted)]'"
+          >
+            {{ format(day, 'd') }}
+          </span>
+          <span
+            v-if="availableHours(day) > 0"
+            class="text-[10px] text-[var(--color-text-muted)]"
+            :class="{ '!text-[var(--color-error)]': isOverloaded(day) }"
+          >
+            {{ plannedHours(day) }}h/{{ availableHours(day) }}h
+          </span>
+        </div>
+
+        <!-- Topics for this day -->
+        <div class="space-y-0.5">
+          <div
+            v-for="topic in planner.topicsForDay(day, 'month')"
+            :key="topic.$id"
+            class="flex items-center gap-1 px-1.5 py-0.5 rounded text-[10px] font-medium cursor-pointer hover:opacity-80 transition-opacity"
+            :style="{ backgroundColor: subjectColor(topic.subject_id) + '22', color: subjectColor(topic.subject_id) }"
+            draggable="true"
+            @dragstart="onDragStart(topic)"
+            :title="`T${topic.number} ${topic.title}`"
+          >
+            <span
+              class="w-1.5 h-1.5 rounded-full shrink-0"
+              :style="{ backgroundColor: subjectColor(topic.subject_id) }"
+            />
+            <span class="truncate">T{{ topic.number }} {{ topic.title }}</span>
+            <button
+              @click.stop="planner.assignTopicToDay(topic.$id, topic.subject_id, null)"
+              class="ml-auto shrink-0 opacity-50 hover:opacity-100"
+            >×</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</template>
+
+<script setup lang="ts">
+import { ref } from 'vue'
+import { format, isToday, isSameMonth } from 'date-fns'
+import { usePlannerStore } from '@/stores/planner'
+import { useSemesterStore } from '@/stores/semester'
+import { getISODay } from 'date-fns'
+import type { Topic, WeeklySchedule } from '@/types'
+
+const props = defineProps<{ subjects: Record<string, { name: string }> }>()
+
+const planner = usePlannerStore()
+const semesterStore = useSemesterStore()
+
+const DAY_NAMES = ['Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb', 'Dom']
+
+function isCurrentMonth(day: Date) {
+  return isSameMonth(day, planner.currentMonth)
+}
+
+// ── Subject colors ────────────────────────────────────────────────────────────
+const PALETTE = [
+  '#6366f1', '#8b5cf6', '#ec4899', '#f59e0b',
+  '#10b981', '#06b6d4', '#f97316', '#84cc16',
+]
+
+function subjectColor(subjectId: string): string {
+  const keys = Object.keys(props.subjects)
+  const idx = keys.indexOf(subjectId)
+  return PALETTE[(idx >= 0 ? idx : Math.abs(hashStr(subjectId))) % PALETTE.length]
+}
+
+function hashStr(s: string): number {
+  let h = 0
+  for (let i = 0; i < s.length; i++) h = (Math.imul(31, h) + s.charCodeAt(i)) | 0
+  return Math.abs(h)
+}
+
+// ── Hours available/planned ───────────────────────────────────────────────────
+const DAY_KEYS: Record<number, keyof WeeklySchedule> = {
+  1: 'hours_mon', 2: 'hours_tue', 3: 'hours_wed',
+  4: 'hours_thu', 5: 'hours_fri', 6: 'hours_sat', 7: 'hours_sun',
+}
+
+function availableHours(day: Date): number {
+  const sch = semesterStore.activeSchedule
+  return sch[DAY_KEYS[getISODay(day)]] ?? 0
+}
+
+function plannedHours(day: Date): number {
+  return planner.topicsForDay(day, 'month').reduce((sum, t) => sum + (t.estimated_hours ?? 0), 0)
+}
+
+function isOverloaded(day: Date): boolean {
+  const avail = availableHours(day)
+  return avail > 0 && plannedHours(day) > avail
+}
+
+// ── Drag & drop ───────────────────────────────────────────────────────────────
+const isDragOver = ref<string | null>(null)
+let draggingTopic: Topic | null = null
+
+function onDragStart(topic: Topic) {
+  draggingTopic = topic
+}
+
+async function onDrop(day: Date) {
+  isDragOver.value = null
+  if (!draggingTopic) return
+  await planner.assignTopicToDay(draggingTopic.$id, draggingTopic.subject_id, day)
+  draggingTopic = null
+}
+</script>
