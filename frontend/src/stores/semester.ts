@@ -85,7 +85,8 @@ export const useSemesterStore = defineStore('semester', () => {
   async function update(id: string, data: { name?: string; start_date?: string; end_date?: string } & Partial<WeeklySchedule>) {
     const { hours_mon, hours_tue, hours_wed, hours_thu, hours_fri, hours_sat, hours_sun, ...rest } = data
     const payload: Record<string, unknown> = { ...rest }
-    if (hours_mon !== undefined || hours_tue !== undefined) {
+    if (hours_mon !== undefined || hours_tue !== undefined || hours_wed !== undefined ||
+        hours_thu !== undefined || hours_fri !== undefined || hours_sat !== undefined || hours_sun !== undefined) {
       const existing = parseSchedule(semesters.value.find((s) => s.$id === id))
       payload.schedule_json = serializeSchedule({ ...existing, ...data as Partial<WeeklySchedule> })
     }

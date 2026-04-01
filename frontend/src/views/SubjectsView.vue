@@ -141,7 +141,7 @@
 <script setup lang="ts">
 import { ref, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
-import { Plus, BookOpen, Library, Pencil, ChevronDown } from 'lucide-vue-next'
+import { Plus, BookOpen, Library, Pencil, ChevronDown, Trash2 } from 'lucide-vue-next'
 import { useSubjectStore } from '@/stores/subject'
 import { useSemesterStore } from '@/stores/semester'
 import { useAuthStore } from '@/stores/auth'

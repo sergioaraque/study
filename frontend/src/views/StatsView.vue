@@ -182,7 +182,7 @@ const semesterBars = computed(() =>
     id: s.$id,
     label: s.name.replace(/\d{4}-\d{4}\s*/g, '').trim() || s.name,
     pct: s.$id === selectedSemesterId.value ? semesterStats.value.completionPct : 0,
-    height: Math.max(8, ((s.$id === selectedSemesterId.value ? semesterStats.value.completionPct : 40) / 100) * 80),
+    height: Math.max(4, ((s.$id === selectedSemesterId.value ? semesterStats.value.completionPct : 0) / 100) * 80),
     color: s.is_active ? 'var(--color-primary)' : `hsl(${220 + i * 30}, 60%, 55%)`,
   }))
 )

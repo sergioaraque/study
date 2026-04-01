@@ -38,12 +38,16 @@ export const useStudySessionStore = defineStore('studySession', () => {
       session_date,
     })
 
+    // If sessions for this topic were already cached, use the cache; otherwise fetch from DB
+    // to avoid overwriting real_hours with an incomplete total
+    const wasCached = data.topic_id in sessionsByTopic.value
     const list = sessionsByTopic.value[data.topic_id] ?? []
     list.unshift(session)
     sessionsByTopic.value[data.topic_id] = list
 
     // Update real_hours on the topic
-    const allSessions = list
+    const allSessions = wasCached ? list : await studySessionCol.listByTopic(data.topic_id)
+    if (!wasCached) sessionsByTopic.value[data.topic_id] = allSessions
     const totalMinutes = allSessions.reduce((acc, s) => acc + s.duration_minutes, 0)
     await topicCol.update(data.topic_id, { real_hours: +(totalMinutes / 60).toFixed(2) })
 
@@ -57,9 +61,11 @@ export const useStudySessionStore = defineStore('studySession', () => {
 
   async function remove(id: string, topicId: string) {
     await studySessionCol.delete(id)
-    sessionsByTopic.value[topicId] = (sessionsByTopic.value[topicId] ?? []).filter(
-      (s) => s.$id !== id
-    )
+    const remaining = (sessionsByTopic.value[topicId] ?? []).filter((s) => s.$id !== id)
+    sessionsByTopic.value[topicId] = remaining
+    // Recalculate real_hours after deletion
+    const totalMinutes = remaining.reduce((acc, s) => acc + s.duration_minutes, 0)
+    await topicCol.update(topicId, { real_hours: +(totalMinutes / 60).toFixed(2) })
   }
 
   return { sessionsByTopic, recentDates, fetchByTopic, fetchRecentDates, create, remove }

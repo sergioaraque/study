@@ -405,6 +405,8 @@ function startEdit(subject: Subject) {
 }
 
 async function commitEdit(subject: Subject) {
+  if (editingId.value !== subject.$id) return  // guard against Enter keydown + blur double-call
+  editingId.value = null
   const val = parseFloat(editValue.value)
   if (!isNaN(val) && val >= 0 && val <= 10 && val !== subject.grade_final) {
     const updated = await subjectCol.update(subject.$id, {
@@ -414,7 +416,6 @@ async function commitEdit(subject: Subject) {
     const idx = allSubjects.value.findIndex((s) => s.$id === subject.$id)
     if (idx !== -1) allSubjects.value[idx] = updated
   }
-  editingId.value = null
 }
 
 // ── Semester actions ──────────────────────────────────────────────────────────
