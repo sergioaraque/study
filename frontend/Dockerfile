@@ -2,7 +2,7 @@
 FROM node:22-slim AS build
 WORKDIR /app
 COPY package*.json ./
-RUN npm ci
+RUN npm install --no-audit --no-fund
 COPY . .
 
 # Vite bakes env vars at build time — declare them as build args
