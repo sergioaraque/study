@@ -41,6 +41,21 @@
       <WeeklyScheduleEditor v-model="schedule" />
     </div>
 
+    <div>
+      <label class="block text-sm font-medium text-[var(--color-text)] mb-1">
+        Objetivo semanal de estudio
+        <span class="text-xs text-[var(--color-text-muted)] font-normal ml-1">(horas totales)</span>
+      </label>
+      <input
+        v-model.number="form.weekly_hours_goal"
+        type="number"
+        min="1"
+        max="80"
+        placeholder="Ej: 15"
+        class="w-full rounded-lg border border-[var(--color-border)] bg-[var(--color-surface)] text-[var(--color-text)] text-sm px-3 py-2 focus:outline-none focus:ring-2 focus:ring-[var(--color-primary)]"
+      />
+    </div>
+
     <div class="flex justify-end gap-2 pt-1">
       <button
         type="button"
@@ -77,6 +92,7 @@ const form = reactive({
   name: props.semester?.name ?? '',
   start_date: props.semester?.start_date ?? '',
   end_date: props.semester?.end_date ?? '',
+  weekly_hours_goal: props.semester?.weekly_hours_goal ?? undefined as number | undefined,
 })
 
 const schedule = reactive<WeeklySchedule>(parseSchedule(props.semester))
@@ -93,6 +109,7 @@ async function submit() {
     } else {
       await store.create({ ...form, ...schedule })
     }
+
     emit('saved')
   } finally {
     loading.value = false

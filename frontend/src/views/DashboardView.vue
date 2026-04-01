@@ -28,9 +28,12 @@
       <UpcomingExams />
     </div>
 
-    <div class="grid grid-cols-1 lg:grid-cols-2 gap-4 mb-4">
-      <SubjectProgressList />
-      <WeekSummary />
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-4 mb-4">
+      <SubjectProgressList class="lg:col-span-2" />
+      <div class="flex flex-col gap-4">
+        <WeekSummary />
+        <WeeklyGoalWidget @open-settings="showSemesters = true" />
+      </div>
     </div>
 
     <WeeklyLoadChart class="mb-4" />
@@ -111,6 +114,7 @@ import PaceAlert from '@/components/dashboard/PaceAlert.vue'
 import SpacedReviewWidget from '@/components/dashboard/SpacedReviewWidget.vue'
 import InAppWeeklySummary from '@/components/dashboard/InAppWeeklySummary.vue'
 import SemesterForm from '@/components/semesters/SemesterForm.vue'
+import WeeklyGoalWidget from '@/components/dashboard/WeeklyGoalWidget.vue'
 
 const semesterStore = useSemesterStore()
 const subjectStore = useSubjectStore()

@@ -153,6 +153,16 @@ export const studySessionCol = {
       r.documents.map((d: Models.Document) => doc<StudySession>(d))
     ),
 
+  listByDateRange: (userId: string, from: string, to: string) =>
+    databases.listDocuments(DB(), COL.studySessions(), [
+      Query.equal('user_id', userId),
+      Query.greaterThanEqual('session_date', from),
+      Query.lessThanEqual('session_date', to),
+      Query.limit(500),
+    ]).then((r: Models.DocumentList<Models.Document>) =>
+      r.documents.map((d: Models.Document) => doc<StudySession>(d))
+    ),
+
   listRecentDates: (userId: string, limit = 365) =>
     databases.listDocuments(DB(), COL.studySessions(), [
       Query.equal('user_id', userId),

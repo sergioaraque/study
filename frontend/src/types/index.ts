@@ -24,6 +24,7 @@ export interface Semester extends AppwriteDoc {
   is_active: boolean
   user_id: string
   schedule_json?: string  // JSON: {"mon":2,"tue":3,"wed":1,"thu":2,"fri":2,"sat":0,"sun":0}
+  weekly_hours_goal?: number
 }
 
 export type SubjectStatus = 'activa' | 'convalidada' | 'aprobada' | 'pendiente'
