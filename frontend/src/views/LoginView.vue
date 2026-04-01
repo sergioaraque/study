@@ -62,7 +62,7 @@ async function handleLogin() {
   error.value = ''
   try {
     await auth.login(email.value, password.value)
-    const redirect = (route.query.redirect as string) || '/'
+    const redirect = (route.query.redirect as string) || '/dashboard'
     router.push(redirect)
   } catch (err: unknown) {
     error.value = (err as { message?: string }).message ?? 'Error al iniciar sesión'

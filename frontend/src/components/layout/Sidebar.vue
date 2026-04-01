@@ -38,7 +38,7 @@ const router = useRouter()
 const auth = useAuthStore()
 
 const navItems = [
-  { to: '/', label: 'Dashboard', icon: LayoutDashboard },
+  { to: '/dashboard', label: 'Dashboard', icon: LayoutDashboard },
   { to: '/subjects', label: 'Asignaturas', icon: BookOpen },
   { to: '/planner', label: 'Planificador', icon: CalendarDays },
   { to: '/plan-vs-reality', label: 'Plan vs Real', icon: BarChart2 },
