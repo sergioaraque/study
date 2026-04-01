@@ -2,6 +2,10 @@
   <div class="min-h-screen flex items-center justify-center bg-[var(--color-surface-2)] px-4">
     <div class="w-full max-w-sm">
       <div class="text-center mb-8">
+        <RouterLink to="/" class="inline-flex items-center gap-1.5 text-xs text-[var(--color-text-muted)] hover:text-[var(--color-text)] transition-colors mb-4">
+          <ChevronLeft :size="14" />
+          Volver al inicio
+        </RouterLink>
         <h1 class="text-2xl font-bold text-[var(--color-text)]">Study Planner</h1>
         <p class="text-sm text-[var(--color-text-muted)] mt-1">UNED — Planificador de estudios</p>
       </div>
@@ -46,6 +50,7 @@
 <script setup lang="ts">
 import { ref } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
+import { ChevronLeft } from 'lucide-vue-next'
 import { useAuthStore } from '@/stores/auth'
 
 const router = useRouter()

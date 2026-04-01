@@ -1,5 +1,5 @@
 <template>
-  <div class="w-48 shrink-0 flex flex-col gap-2">
+  <div class="w-full lg:w-48 shrink-0 flex flex-col gap-2">
     <!-- Overdue topics (Option D) -->
     <div
       v-if="overdue.length"

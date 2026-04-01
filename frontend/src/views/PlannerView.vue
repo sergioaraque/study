@@ -1,11 +1,11 @@
 <template>
   <div>
     <!-- Header -->
-    <div class="flex items-center justify-between mb-6 gap-4 flex-wrap">
-      <h1 class="text-xl font-semibold text-[var(--color-text)]">Planificador</h1>
-      <div class="flex items-center gap-2">
-        <!-- Week/Month toggle -->
-        <div class="flex rounded-lg border border-[var(--color-border)] overflow-hidden text-xs">
+    <div class="mb-5">
+      <!-- Row 1: title + week/month toggle -->
+      <div class="flex items-center justify-between mb-3 gap-3">
+        <h1 class="text-xl font-semibold text-[var(--color-text)]">Planificador</h1>
+        <div class="flex rounded-lg border border-[var(--color-border)] overflow-hidden text-xs shrink-0">
           <button
             @click="viewMode = 'week'"
             class="px-3 py-1.5 transition-colors"
@@ -17,53 +17,89 @@
             :class="viewMode === 'month' ? 'bg-[var(--color-primary)] text-white' : 'text-[var(--color-text-muted)] hover:bg-[var(--color-surface-raised)]'"
           >Mes</button>
         </div>
+      </div>
 
-        <!-- Navigation -->
+      <!-- Row 2: navigation + actions -->
+      <div class="flex items-center gap-2">
         <template v-if="viewMode === 'week'">
-          <button @click="planner.prevWeek()" class="btn-secondary p-1.5"><ChevronLeft :size="16" /></button>
-          <span class="text-sm font-medium text-[var(--color-text)] min-w-44 text-center">{{ planner.weekLabel }}</span>
-          <button @click="planner.nextWeek()" class="btn-secondary p-1.5"><ChevronRight :size="16" /></button>
-          <button @click="planner.goToCurrentWeek()" class="btn-secondary text-xs">Hoy</button>
+          <button @click="planner.prevWeek()" class="btn-secondary p-1.5 shrink-0"><ChevronLeft :size="16" /></button>
+          <span class="text-sm font-medium text-[var(--color-text)] flex-1 text-center">{{ planner.weekLabel }}</span>
+          <button @click="planner.nextWeek()" class="btn-secondary p-1.5 shrink-0"><ChevronRight :size="16" /></button>
         </template>
         <template v-else>
-          <button @click="planner.prevMonth()" class="btn-secondary p-1.5"><ChevronLeft :size="16" /></button>
-          <span class="text-sm font-medium text-[var(--color-text)] min-w-36 text-center capitalize">{{ planner.monthLabel }}</span>
-          <button @click="planner.nextMonth()" class="btn-secondary p-1.5"><ChevronRight :size="16" /></button>
-          <button @click="planner.goToCurrentMonth()" class="btn-secondary text-xs">Hoy</button>
+          <button @click="planner.prevMonth()" class="btn-secondary p-1.5 shrink-0"><ChevronLeft :size="16" /></button>
+          <span class="text-sm font-medium text-[var(--color-text)] flex-1 text-center capitalize">{{ planner.monthLabel }}</span>
+          <button @click="planner.nextMonth()" class="btn-secondary p-1.5 shrink-0"><ChevronRight :size="16" /></button>
         </template>
-
-        <button @click="showSchedule = true" class="btn-secondary text-xs flex items-center gap-1">
+        <button
+          @click="viewMode === 'week' ? planner.goToCurrentWeek() : planner.goToCurrentMonth()"
+          class="btn-secondary text-xs shrink-0"
+        >Hoy</button>
+        <button @click="showSchedule = true" class="btn-secondary text-xs shrink-0 flex items-center gap-1">
           <Clock :size="13" />
-          Horario
+          <span class="hidden sm:inline">Horario</span>
         </button>
       </div>
     </div>
 
     <!-- Week view -->
-    <div v-if="viewMode === 'week'" class="flex gap-4 overflow-x-auto pb-4">
-      <UnassignedPanel
-        :subject-ids="subjectIds"
-        @assign="planner.fetchWeek()"
-        @move-to-today="moveToToday"
-      />
-      <div class="flex gap-2 flex-1 min-w-0">
-        <WeekColumn
-          v-for="day in planner.weekDays"
-          :key="format(day, 'yyyy-MM-dd')"
-          :day="day"
-          :topics="planner.topicsForDay(day, 'week')"
-          :subjects="subjectMap"
-          :available-hours="availableHoursForDay(day)"
-          @drop="(topicId, subjectId) => planner.assignTopicToDay(topicId, subjectId, day)"
-          @remove="(topicId, subjectId) => planner.assignTopicToDay(topicId, subjectId, null)"
-          @click-day="selectedDay = day"
+    <div v-if="viewMode === 'week'" class="pb-4">
+      <!-- Mobile: collapsible panel above the grid -->
+      <div class="lg:hidden mb-3">
+        <button
+          @click="mobileUnassignedOpen = !mobileUnassignedOpen"
+          class="w-full flex items-center justify-between px-3 py-2 rounded-lg bg-[var(--color-surface)] border border-[var(--color-border)] text-sm"
+        >
+          <span class="font-medium text-[var(--color-text)] flex items-center gap-2">
+            Sin asignar
+            <span
+              v-if="planner.overdueTopics.length"
+              class="text-xs text-[var(--color-warning)] font-semibold"
+            >· {{ planner.overdueTopics.length }} atrasados</span>
+          </span>
+          <ChevronDown :size="14" class="transition-transform text-[var(--color-text-muted)]" :class="mobileUnassignedOpen ? 'rotate-180' : ''" />
+        </button>
+        <div v-if="mobileUnassignedOpen" class="mt-2">
+          <UnassignedPanel
+            :subject-ids="subjectIds"
+            @assign="planner.fetchWeek()"
+            @move-to-today="moveToToday"
+          />
+        </div>
+      </div>
+
+      <!-- Week grid + desktop sidebar -->
+      <div class="flex gap-4">
+        <!-- Desktop sidebar (hidden on mobile) -->
+        <UnassignedPanel
+          class="hidden lg:flex"
+          :subject-ids="subjectIds"
+          @assign="planner.fetchWeek()"
+          @move-to-today="moveToToday"
         />
+        <!-- 7-day grid: always scrolls horizontally -->
+        <div class="flex-1 min-w-0 overflow-x-auto pb-2">
+          <div class="flex gap-2 min-w-max">
+            <WeekColumn
+              v-for="day in planner.weekDays"
+              :key="format(day, 'yyyy-MM-dd')"
+              :day="day"
+              :topics="planner.topicsForDay(day, 'week')"
+              :subjects="subjectMap"
+              :available-hours="availableHoursForDay(day)"
+              @drop="(topicId, subjectId) => planner.assignTopicToDay(topicId, subjectId, day)"
+              @remove="(topicId, subjectId) => planner.assignTopicToDay(topicId, subjectId, null)"
+              @click-day="selectedDay = day"
+            />
+          </div>
+        </div>
       </div>
     </div>
 
     <!-- Month view -->
-    <div v-else class="flex gap-4">
-      <div class="w-48 shrink-0">
+    <div v-else class="flex flex-col lg:flex-row gap-4">
+      <!-- Sidebar: below on mobile, left on desktop -->
+      <div class="w-full lg:w-48 lg:shrink-0">
         <UnassignedPanel
           :subject-ids="subjectIds"
           compact
@@ -71,12 +107,12 @@
           @move-to-today="moveToToday"
         />
       </div>
-      <div class="flex-1 min-w-0">
+      <div class="flex-1 min-w-0 overflow-x-auto">
         <PlannerMonthView :subjects="subjectMap" />
       </div>
     </div>
 
-    <!-- Day panel (Option A) -->
+    <!-- Day panel -->
     <DayPanel
       :open="selectedDay !== null"
       :day="selectedDay"
@@ -119,7 +155,7 @@
 <script setup lang="ts">
 import { computed, onMounted, reactive, ref, watch } from 'vue'
 import { format, getISODay } from 'date-fns'
-import { ChevronLeft, ChevronRight, Clock, X } from 'lucide-vue-next'
+import { ChevronLeft, ChevronRight, ChevronDown, Clock, X } from 'lucide-vue-next'
 import { usePlannerStore } from '@/stores/planner'
 import { useSubjectStore } from '@/stores/subject'
 import { useSemesterStore } from '@/stores/semester'
@@ -137,6 +173,8 @@ const semesterStore = useSemesterStore()
 
 const viewMode = ref<'week' | 'month'>('week')
 const selectedDay = ref<Date | null>(null)
+const mobileUnassignedOpen = ref(false)
+
 const subjectIds = computed(() => subjectStore.subjects.map((s) => s.$id))
 const subjectMap = computed(() => Object.fromEntries(subjectStore.subjects.map((s) => [s.$id, s])))
 
