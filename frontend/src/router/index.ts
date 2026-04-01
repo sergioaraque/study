@@ -6,7 +6,6 @@ const routes = [
     path: '/',
     name: 'landing',
     component: () => import('@/views/LandingView.vue'),
-    meta: { public: true },
   },
   {
     path: '/login',
