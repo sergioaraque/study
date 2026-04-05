@@ -40,6 +40,12 @@
           <span class="hidden sm:inline">Horario</span>
         </button>
       </div>
+
+      <div class="mt-2 flex items-center justify-end gap-3 text-[11px] text-[var(--color-text-muted)]">
+        <span class="flex items-center gap-1"><span class="w-2.5 h-2.5 rounded-full bg-[var(--color-success)]" /> Libre</span>
+        <span class="flex items-center gap-1"><span class="w-2.5 h-2.5 rounded-full bg-[var(--color-warning)]" /> Ajustado</span>
+        <span class="flex items-center gap-1"><span class="w-2.5 h-2.5 rounded-full bg-[var(--color-error)]" /> Sobrecargado</span>
+      </div>
     </div>
 
     <!-- Week view -->

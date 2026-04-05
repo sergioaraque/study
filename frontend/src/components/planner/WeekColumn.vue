@@ -16,9 +16,16 @@
       <p class="text-sm font-semibold" :class="isToday ? 'text-[var(--color-primary)]' : 'text-[var(--color-text)]'">
         {{ dayNumber }}
       </p>
-      <p v-if="(availableHours ?? 0) > 0" class="text-xs mt-0.5" :class="overloaded ? 'text-[var(--color-error)]' : 'text-[var(--color-text-muted)]'">
-        {{ plannedHours }}h/{{ availableHours }}h
+      <p v-if="(availableHours ?? 0) > 0" class="text-xs mt-0.5" :class="loadStateClass">
+        {{ plannedHours.toFixed(1) }}h/{{ availableHours!.toFixed(1) }}h · {{ loadStateLabel }}
       </p>
+      <div v-if="(availableHours ?? 0) > 0" class="mx-2 mt-1.5 h-1.5 rounded-full bg-[var(--color-border)] overflow-hidden">
+        <div
+          class="h-full rounded-full transition-all duration-300"
+          :class="loadBarClass"
+          :style="{ width: `${Math.min(loadRatio * 100, 100)}%` }"
+        />
+      </div>
       <!-- Overdue badge (Option B) -->
       <span
         v-if="overdueCount > 0"
@@ -86,9 +93,27 @@ const isPast = computed(() => isBefore(props.day, startOfDay(new Date())))
 const plannedHours = computed(() =>
   props.topics.reduce((sum, t) => sum + (t.estimated_hours ?? 0), 0)
 )
-const overloaded = computed(() =>
-  (props.availableHours ?? 0) > 0 && plannedHours.value > (props.availableHours ?? 0)
-)
+const loadRatio = computed(() => {
+  const avail = props.availableHours ?? 0
+  if (avail <= 0) return 0
+  return plannedHours.value / avail
+})
+const loadStateLabel = computed(() => {
+  if ((props.availableHours ?? 0) <= 0) return 'Sin horario'
+  if (loadRatio.value > 1) return 'Sobrecargado'
+  if (loadRatio.value >= 0.85) return 'Ajustado'
+  return 'Libre'
+})
+const loadStateClass = computed(() => {
+  if (loadRatio.value > 1) return 'text-[var(--color-error)]'
+  if (loadRatio.value >= 0.85) return 'text-[var(--color-warning)]'
+  return 'text-[var(--color-text-muted)]'
+})
+const loadBarClass = computed(() => {
+  if (loadRatio.value > 1) return 'bg-[var(--color-error)]'
+  if (loadRatio.value >= 0.85) return 'bg-[var(--color-warning)]'
+  return 'bg-[var(--color-success)]'
+})
 
 // Option B: count topics from past days that aren't completed
 const overdueCount = computed(() =>

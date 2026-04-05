@@ -38,11 +38,18 @@
           </span>
           <span
             v-if="availableHours(day) > 0"
-            class="text-[10px] text-[var(--color-text-muted)]"
-            :class="{ '!text-[var(--color-error)]': isOverloaded(day) }"
+            class="text-[10px]"
+            :class="loadStateClass(day)"
           >
-            {{ plannedHours(day) }}h/{{ availableHours(day) }}h
+            {{ plannedHours(day).toFixed(1) }}h/{{ availableHours(day).toFixed(1) }}h
           </span>
+        </div>
+        <div v-if="availableHours(day) > 0" class="h-1 rounded-full bg-[var(--color-border)] overflow-hidden mb-1.5">
+          <div
+            class="h-full rounded-full transition-all duration-300"
+            :class="loadBarClass(day)"
+            :style="{ width: `${Math.min(loadRatio(day) * 100, 100)}%` }"
+          />
         </div>
 
         <!-- Topics for this day -->
@@ -137,9 +144,24 @@ function plannedHours(day: Date): number {
   return planner.topicsForDay(day, 'month').reduce((sum, t) => sum + (t.estimated_hours ?? 0), 0)
 }
 
-function isOverloaded(day: Date): boolean {
+function loadRatio(day: Date): number {
   const avail = availableHours(day)
-  return avail > 0 && plannedHours(day) > avail
+  if (avail <= 0) return 0
+  return plannedHours(day) / avail
+}
+
+function loadStateClass(day: Date): string {
+  const ratio = loadRatio(day)
+  if (ratio > 1) return 'text-[var(--color-error)]'
+  if (ratio >= 0.85) return 'text-[var(--color-warning)]'
+  return 'text-[var(--color-text-muted)]'
+}
+
+function loadBarClass(day: Date): string {
+  const ratio = loadRatio(day)
+  if (ratio > 1) return 'bg-[var(--color-error)]'
+  if (ratio >= 0.85) return 'bg-[var(--color-warning)]'
+  return 'bg-[var(--color-success)]'
 }
 
 // ── Drag & drop ───────────────────────────────────────────────────────────────

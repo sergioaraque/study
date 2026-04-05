@@ -5,7 +5,6 @@
     </label>
     <div ref="pickerWrapRef" class="relative group">
       <input
-        ref="inputRef"
         v-bind="$attrs"
         :value="modelValue"
         :required="required"
@@ -165,7 +164,6 @@ const props = withDefaults(defineProps<{
 const emit = defineEmits<{ 'update:modelValue': [value: string] }>()
 defineOptions({ inheritAttrs: false })
 
-const inputRef = ref<HTMLInputElement | null>(null)
 const pickerWrapRef = ref<HTMLElement | null>(null)
 const showPanel = ref(false)
 const tempDate = ref('')
