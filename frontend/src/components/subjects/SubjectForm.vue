@@ -9,6 +9,20 @@
     <BaseInput v-model="form.description" label="Descripción breve" placeholder="Resumen de la asignatura" />
     <BaseSelect v-model="form.status" label="Estado" :options="statusOptions" />
     <BaseInput v-model.number="form.pec_weight" label="Peso PEC en nota final (%)" type="number" />
+    <div class="space-y-1">
+      <BaseInput
+        v-model="form.manual_final_grade"
+        label="Nota final manual (opcional)"
+        type="number"
+        step="0.1"
+        min="0"
+        max="10"
+        placeholder="Ej: 7.5"
+      />
+      <p class="text-xs text-[var(--color-text-muted)]">
+        Si defines esta nota, se usará como nota final del expediente sin depender de PECs o exámenes.
+      </p>
+    </div>
 
     <p v-if="error" class="text-sm text-[var(--color-danger)]">{{ error }}</p>
 
@@ -55,6 +69,7 @@ const form = ref({
   description: '',
   status: 'activa' as SubjectStatus,
   pec_weight: 40,
+  manual_final_grade: '',
 })
 
 watch(() => props.subject, (s) => {
@@ -67,6 +82,7 @@ watch(() => props.subject, (s) => {
       description: s.description ?? '',
       status: s.status,
       pec_weight: s.pec_weight,
+      manual_final_grade: s.grade_final != null ? String(s.grade_final) : '',
     }
   }
 }, { immediate: true })
@@ -75,11 +91,32 @@ async function handleSubmit() {
   saving.value = true
   error.value = ''
   try {
+    let gradeFinal: number | undefined
+    const rawFinal = form.value.manual_final_grade.trim()
+    if (rawFinal !== '') {
+      const parsed = Number(rawFinal)
+      if (Number.isNaN(parsed) || parsed < 0 || parsed > 10) {
+        throw new Error('La nota final manual debe estar entre 0 y 10')
+      }
+      gradeFinal = parsed
+    }
+
+    const payload = {
+      name: form.value.name,
+      code: form.value.code,
+      credits: form.value.credits,
+      degree_year: form.value.degree_year,
+      description: form.value.description,
+      status: form.value.status,
+      pec_weight: form.value.pec_weight,
+      grade_final: gradeFinal,
+    }
+
     if (props.subject) {
-      await subjectStore.update(props.subject.$id, { ...form.value })
+      await subjectStore.update(props.subject.$id, payload)
     } else {
       await subjectStore.create({
-        ...form.value,
+        ...payload,
         semester_id: props.semesterId,
         user_id: props.userId,
       })

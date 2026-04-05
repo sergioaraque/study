@@ -141,12 +141,18 @@
                       class="group flex items-center justify-center gap-1 mx-auto"
                       title="Haz clic para editar"
                     >
-                      <span v-if="subject.grade_final != null" class="text-sm font-semibold" :class="gradeClass(subject.grade_final)">
-                        {{ subject.grade_final.toFixed(2) }}
-                      </span>
-                      <span v-else-if="computedFinal(subject) != null" class="text-xs text-[var(--color-text-muted)] italic">
-                        ~{{ computedFinal(subject)!.toFixed(1) }}
-                      </span>
+                      <template v-if="subject.grade_final != null">
+                        <span class="text-sm font-semibold" :class="gradeClass(subject.grade_final)">
+                          {{ subject.grade_final.toFixed(2) }}
+                        </span>
+                        <span class="text-[10px] px-1.5 py-0.5 rounded-full bg-[var(--color-primary)]/15 text-[var(--color-primary)] font-medium">Manual</span>
+                      </template>
+                      <template v-else-if="computedFinal(subject) != null">
+                        <span class="text-xs text-[var(--color-text-muted)] italic">
+                          ~{{ computedFinal(subject)!.toFixed(1) }}
+                        </span>
+                        <span class="text-[10px] px-1.5 py-0.5 rounded-full bg-[var(--color-border)] text-[var(--color-text-muted)] font-medium">Calculada</span>
+                      </template>
                       <span v-else class="text-xs text-[var(--color-text-muted)]">—</span>
                       <Pencil :size="11" class="opacity-0 group-hover:opacity-40 text-[var(--color-text-muted)] transition-opacity" />
                     </button>

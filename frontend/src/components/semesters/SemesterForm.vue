@@ -76,7 +76,7 @@
 </template>
 
 <script setup lang="ts">
-import { reactive, ref } from 'vue'
+import { reactive, ref, watch } from 'vue'
 import { useSemesterStore, parseSchedule, serializeSchedule } from '@/stores/semester'
 import { semesterCol } from '@/lib/collections'
 import type { Semester, WeeklySchedule } from '@/types'
@@ -90,12 +90,26 @@ const loading = ref(false)
 
 const form = reactive({
   name: props.semester?.name ?? '',
-  start_date: props.semester?.start_date ?? '',
-  end_date: props.semester?.end_date ?? '',
+  start_date: props.semester?.start_date?.slice(0, 10) ?? '',
+  end_date: props.semester?.end_date?.slice(0, 10) ?? '',
   weekly_hours_goal: props.semester?.weekly_hours_goal ?? undefined as number | undefined,
 })
 
 const schedule = reactive<WeeklySchedule>(parseSchedule(props.semester))
+
+watch(
+  () => props.semester,
+  (semester) => {
+    form.name = semester?.name ?? ''
+    form.start_date = semester?.start_date?.slice(0, 10) ?? ''
+    form.end_date = semester?.end_date?.slice(0, 10) ?? ''
+    form.weekly_hours_goal = semester?.weekly_hours_goal ?? undefined
+
+    const parsed = parseSchedule(semester)
+    Object.assign(schedule, parsed)
+  },
+  { immediate: true }
+)
 
 async function submit() {
   loading.value = true

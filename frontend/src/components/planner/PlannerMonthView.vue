@@ -16,8 +16,9 @@
       <div
         v-for="day in planner.monthCalendarDays"
         :key="format(day, 'yyyy-MM-dd')"
-        class="min-h-20 rounded-lg border p-1.5 transition-colors"
+        class="rounded-lg border transition-colors"
         :class="[
+          compact ? 'min-h-16 p-1' : 'min-h-20 p-1.5',
           isCurrentMonth(day) ? 'bg-[var(--color-surface)] border-[var(--color-border)]' : 'bg-transparent border-transparent opacity-40',
           isToday(day) ? '!border-[var(--color-primary)]/50 !bg-[var(--color-primary)]/5' : '',
           isDragOver === format(day, 'yyyy-MM-dd') ? '!border-[var(--color-primary)] !bg-[var(--color-primary)]/10' : '',
@@ -27,24 +28,24 @@
         @drop.prevent="onDrop(day)"
       >
         <!-- Day number + hours -->
-        <div class="flex items-center justify-between mb-1">
+        <div class="flex items-center justify-between" :class="compact ? 'mb-0.5' : 'mb-1'">
           <span
-            class="text-xs font-medium w-5 h-5 flex items-center justify-center rounded-full"
-            :class="isToday(day)
-              ? 'bg-[var(--color-primary)] text-white'
-              : 'text-[var(--color-text-muted)]'"
+            class="font-medium w-5 h-5 flex items-center justify-center rounded-full"
+            :class="[
+              compact ? 'text-[10px]' : 'text-xs',
+              isToday(day) ? 'bg-[var(--color-primary)] text-white' : 'text-[var(--color-text-muted)]',
+            ]"
           >
             {{ format(day, 'd') }}
           </span>
           <span
             v-if="availableHours(day) > 0"
-            class="text-[10px]"
-            :class="loadStateClass(day)"
+            :class="[compact ? 'text-[9px]' : 'text-[10px]', loadStateClass(day)]"
           >
             {{ plannedHours(day).toFixed(1) }}h/{{ availableHours(day).toFixed(1) }}h
           </span>
         </div>
-        <div v-if="availableHours(day) > 0" class="h-1 rounded-full bg-[var(--color-border)] overflow-hidden mb-1.5">
+        <div v-if="availableHours(day) > 0" class="h-1 rounded-full bg-[var(--color-border)] overflow-hidden" :class="compact ? 'mb-1' : 'mb-1.5'">
           <div
             class="h-full rounded-full transition-all duration-300"
             :class="loadBarClass(day)"
@@ -57,7 +58,8 @@
           <div
             v-for="topic in planner.topicsForDay(day, 'month')"
             :key="topic.$id"
-            class="flex items-center gap-1 px-1.5 py-0.5 rounded text-[10px] font-medium cursor-pointer hover:opacity-80 transition-opacity"
+            class="flex items-center gap-1 rounded font-medium cursor-pointer hover:opacity-80 transition-opacity"
+            :class="compact ? 'px-1 py-0.5 text-[9px]' : 'px-1.5 py-0.5 text-[10px]'"
             :style="{ backgroundColor: subjectColor(topic.subject_id) + '22', color: subjectColor(topic.subject_id) }"
             draggable="true"
             @dragstart="onDragStart(topic)"
@@ -76,7 +78,8 @@
           <div
             v-for="session in planner.tutoringsForDay(day, 'month')"
             :key="session.$id"
-            class="flex items-center gap-1 px-1.5 py-0.5 rounded text-[10px] border border-[var(--color-border)] bg-[var(--color-surface-raised)] text-[var(--color-text)]"
+            class="flex items-center gap-1 rounded border border-[var(--color-border)] bg-[var(--color-surface-raised)] text-[var(--color-text)]"
+            :class="compact ? 'px-1 py-0.5 text-[9px]' : 'px-1.5 py-0.5 text-[10px]'"
             :title="`Tutoría ${subjectName(session.subject_id)} ${format(new Date(session.date), 'HH:mm')}`"
           >
             <span class="w-1.5 h-1.5 rounded-full shrink-0 bg-[var(--color-primary)]" />
@@ -96,7 +99,7 @@ import { useSemesterStore } from '@/stores/semester'
 import { getISODay } from 'date-fns'
 import type { Topic, WeeklySchedule } from '@/types'
 
-const props = defineProps<{ subjects: Record<string, { name: string }> }>()
+const props = defineProps<{ subjects: Record<string, { name: string }>; compact?: boolean }>()
 
 const planner = usePlannerStore()
 const semesterStore = useSemesterStore()

@@ -1,25 +1,29 @@
 <template>
   <div
-    class="flex-1 min-w-28 flex flex-col"
+    class="flex-1 flex flex-col"
+    :class="compact ? 'min-w-24' : 'min-w-28'"
     @dragover.prevent
     @drop.prevent="onDrop"
   >
     <!-- Day header (clickable) -->
     <div
-      class="relative text-center py-2 rounded-t-lg border border-b-0 cursor-pointer transition-colors hover:bg-[var(--color-surface-raised)]"
-      :class="isToday
-        ? 'bg-[var(--color-primary)]/10 border-[var(--color-primary)]/30'
-        : 'bg-[var(--color-surface)] border-[var(--color-border)]'"
+      class="relative text-center rounded-t-lg border border-b-0 cursor-pointer transition-colors hover:bg-[var(--color-surface-raised)]"
+      :class="[
+        compact ? 'py-1.5 px-1.5' : 'py-2 px-2',
+        isToday
+          ? 'bg-[var(--color-primary)]/10 border-[var(--color-primary)]/30'
+          : 'bg-[var(--color-surface)] border-[var(--color-border)]',
+      ]"
       @click="$emit('click-day')"
     >
-      <p class="text-xs text-[var(--color-text-muted)] uppercase tracking-wide">{{ dayName }}</p>
-      <p class="text-sm font-semibold" :class="isToday ? 'text-[var(--color-primary)]' : 'text-[var(--color-text)]'">
+      <p class="uppercase tracking-wide" :class="compact ? 'text-[10px] text-[var(--color-text-muted)]' : 'text-xs text-[var(--color-text-muted)]'">{{ dayName }}</p>
+      <p :class="[compact ? 'text-xs font-semibold' : 'text-sm font-semibold', isToday ? 'text-[var(--color-primary)]' : 'text-[var(--color-text)]']">
         {{ dayNumber }}
       </p>
-      <p v-if="(availableHours ?? 0) > 0" class="text-xs mt-0.5" :class="loadStateClass">
+      <p v-if="(availableHours ?? 0) > 0" class="mt-0.5" :class="[compact ? 'text-[10px]' : 'text-xs', loadStateClass]">
         {{ plannedHours.toFixed(1) }}h/{{ availableHours!.toFixed(1) }}h · {{ loadStateLabel }}
       </p>
-      <div v-if="(availableHours ?? 0) > 0" class="mx-2 mt-1.5 h-1.5 rounded-full bg-[var(--color-border)] overflow-hidden">
+      <div v-if="(availableHours ?? 0) > 0" :class="compact ? 'mx-1 mt-1 h-1 rounded-full' : 'mx-2 mt-1.5 h-1.5 rounded-full'" class="bg-[var(--color-border)] overflow-hidden">
         <div
           class="h-full rounded-full transition-all duration-300"
           :class="loadBarClass"
@@ -35,10 +39,13 @@
 
     <!-- Drop zone -->
     <div
-      class="flex-1 min-h-32 p-2 rounded-b-lg border border-t-0 space-y-1.5"
-      :class="isDragOver
-        ? 'bg-[var(--color-primary)]/5 border-[var(--color-primary)]/30'
-        : 'bg-[var(--color-surface)] border-[var(--color-border)]'"
+      class="flex-1 rounded-b-lg border border-t-0"
+      :class="[
+        compact ? 'min-h-28 p-1.5 space-y-1' : 'min-h-32 p-2 space-y-1.5',
+        isDragOver
+          ? 'bg-[var(--color-primary)]/5 border-[var(--color-primary)]/30'
+          : 'bg-[var(--color-surface)] border-[var(--color-border)]',
+      ]"
       @dragenter="isDragOver = true"
       @dragleave="isDragOver = false"
     >
@@ -53,10 +60,11 @@
       <div
         v-for="session in tutorings"
         :key="session.$id"
-        class="px-2 py-1.5 rounded-md border border-[var(--color-border)] bg-[var(--color-surface-raised)]"
+        class="rounded-md border border-[var(--color-border)] bg-[var(--color-surface-raised)]"
+        :class="compact ? 'px-1.5 py-1' : 'px-2 py-1.5'"
       >
-        <p class="text-[10px] font-semibold text-[var(--color-text)] leading-tight">Tutoría</p>
-        <p class="text-[10px] text-[var(--color-text-muted)] leading-tight">{{ subjectName(session.subject_id) }} · {{ formatTime(session.date) }}</p>
+        <p :class="compact ? 'text-[9px]' : 'text-[10px]'" class="font-semibold text-[var(--color-text)] leading-tight">Tutoría</p>
+        <p :class="compact ? 'text-[9px]' : 'text-[10px]'" class="text-[var(--color-text-muted)] leading-tight">{{ subjectName(session.subject_id) }} · {{ formatTime(session.date) }}</p>
       </div>
     </div>
   </div>
@@ -75,6 +83,7 @@ const props = defineProps<{
   tutorings: TutoringSession[]
   subjects: Record<string, Subject>
   availableHours?: number
+  compact?: boolean
 }>()
 
 const emit = defineEmits<{

@@ -16,7 +16,23 @@
             class="px-3 py-1.5 transition-colors"
             :class="viewMode === 'month' ? 'bg-[var(--color-primary)] text-white' : 'text-[var(--color-text-muted)] hover:bg-[var(--color-surface-raised)]'"
           >Mes</button>
+          <button
+            @click="switchToAgenda"
+            class="px-3 py-1.5 transition-colors"
+            :class="viewMode === 'agenda' ? 'bg-[var(--color-primary)] text-white' : 'text-[var(--color-text-muted)] hover:bg-[var(--color-surface-raised)]'"
+          >Agenda</button>
         </div>
+      </div>
+
+      <div class="flex items-center justify-between gap-3 mb-2">
+        <p class="text-[11px] text-[var(--color-text-muted)]">Ajusta la densidad de la vista para ver más contenido o más espacio.</p>
+        <button
+          @click="toggleDensity"
+          class="text-xs px-3 py-1.5 rounded-lg border border-[var(--color-border)] transition-colors"
+          :class="compactMode ? 'bg-[var(--color-primary)]/10 text-[var(--color-primary)]' : 'text-[var(--color-text-muted)] hover:bg-[var(--color-surface-raised)]'"
+        >
+          {{ compactMode ? 'Compacto' : 'Cómodo' }}
+        </button>
       </div>
 
       <!-- Row 2: navigation + actions -->
@@ -94,6 +110,7 @@
               :tutorings="planner.tutoringsForDay(day, 'week')"
               :subjects="subjectMap"
               :available-hours="availableHoursForDay(day)"
+              :compact="compactMode"
               @drop="(topicId, subjectId) => planner.assignTopicToDay(topicId, subjectId, day)"
               @remove="(topicId, subjectId) => planner.assignTopicToDay(topicId, subjectId, null)"
               @click-day="selectedDay = day"
@@ -104,7 +121,7 @@
     </div>
 
     <!-- Month view -->
-    <div v-else class="flex flex-col lg:flex-row gap-4">
+    <div v-else-if="viewMode === 'month'" class="flex flex-col lg:flex-row gap-4">
       <!-- Sidebar: below on mobile, left on desktop -->
       <div class="w-full lg:w-48 lg:shrink-0">
         <UnassignedPanel
@@ -115,7 +132,22 @@
         />
       </div>
       <div class="flex-1 min-w-0 overflow-x-auto">
-        <PlannerMonthView :subjects="subjectMap" />
+        <PlannerMonthView :subjects="subjectMap" :compact="compactMode" />
+      </div>
+    </div>
+
+    <!-- Agenda view -->
+    <div v-else class="flex flex-col lg:flex-row gap-4">
+      <div class="w-full lg:w-48 lg:shrink-0">
+        <UnassignedPanel
+          :subject-ids="subjectIds"
+          compact
+          @assign="planner.fetchMonth()"
+          @move-to-today="moveToToday"
+        />
+      </div>
+      <div class="flex-1 min-w-0 overflow-hidden">
+        <PlannerAgendaView :subjects="subjectMap" :compact="compactMode" />
       </div>
     </div>
 
@@ -126,6 +158,7 @@
       :topics="selectedDayTopics"
       :tutorings="selectedDayTutorings"
       :subjects="subjectMap"
+      :compact="compactMode"
       @close="selectedDay = null"
       @move-to-today="(topicId, subjectId) => { moveToToday(topicId, subjectId); selectedDay = null }"
     />
@@ -172,6 +205,7 @@ import { parseSchedule } from '@/stores/semester'
 import WeekColumn from '@/components/planner/WeekColumn.vue'
 import UnassignedPanel from '@/components/planner/UnassignedPanel.vue'
 import PlannerMonthView from '@/components/planner/PlannerMonthView.vue'
+import PlannerAgendaView from '@/components/planner/PlannerAgendaView.vue'
 import DayPanel from '@/components/planner/DayPanel.vue'
 import WeeklyScheduleEditor from '@/components/semesters/WeeklyScheduleEditor.vue'
 
@@ -179,9 +213,11 @@ const planner = usePlannerStore()
 const subjectStore = useSubjectStore()
 const semesterStore = useSemesterStore()
 
-const viewMode = ref<'week' | 'month'>('week')
+const viewMode = ref<'week' | 'month' | 'agenda'>('week')
 const selectedDay = ref<Date | null>(null)
 const mobileUnassignedOpen = ref(false)
+const COMPACT_KEY = 'study.planner.compact.v1'
+const compactMode = ref(localStorage.getItem(COMPACT_KEY) === '1')
 
 const subjectIds = computed(() => subjectStore.subjects.map((s) => s.$id))
 const subjectMap = computed(() => Object.fromEntries(subjectStore.subjects.map((s) => [s.$id, s])))
@@ -208,6 +244,15 @@ function switchToMonth() {
   planner.fetchMonth()
 }
 
+function switchToAgenda() {
+  viewMode.value = 'agenda'
+  planner.fetchMonth()
+}
+
+function toggleDensity() {
+  compactMode.value = !compactMode.value
+}
+
 async function moveToToday(topicId: string, subjectId: string) {
   await planner.assignTopicToDay(topicId, subjectId, new Date())
 }
@@ -227,6 +272,10 @@ watch(
   { immediate: true }
 )
 
+watch(compactMode, (value) => {
+  localStorage.setItem(COMPACT_KEY, value ? '1' : '0')
+})
+
 async function saveSchedule() {
   const s = semesterStore.activeSemester
   if (!s) return
@@ -240,6 +289,7 @@ async function saveSchedule() {
 }
 
 onMounted(async () => {
+  compactMode.value = localStorage.getItem(COMPACT_KEY) === '1'
   await semesterStore.fetchAll()
   await subjectStore.fetchActive()
   await planner.fetchWeek()

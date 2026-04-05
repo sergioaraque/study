@@ -17,14 +17,14 @@
     </div>
 
     <!-- Topics -->
-    <div v-if="topics.length" class="space-y-4">
+    <div v-if="topics.length" :class="compact ? 'space-y-3' : 'space-y-4'">
       <div
         v-for="topic in topics"
         :key="topic.$id"
         class="border border-[var(--color-border)] rounded-xl overflow-hidden"
       >
         <!-- Topic header -->
-        <div class="p-3 bg-[var(--color-surface-raised)] flex items-center justify-between gap-2">
+        <div class="bg-[var(--color-surface-raised)] flex items-center justify-between gap-2" :class="compact ? 'p-2.5' : 'p-3'">
           <div class="min-w-0">
             <p class="text-xs font-semibold text-[var(--color-text)] truncate">
               T{{ topic.number }}. {{ topic.title }}
@@ -39,19 +39,20 @@
           >{{ topic.status }}</span>
         </div>
         <!-- Task list -->
-        <div class="px-3 pb-3">
+        <div :class="compact ? 'px-2.5 pb-2.5' : 'px-3 pb-3'">
           <TopicTaskList :topic-id="topic.$id" :user-id="topic.user_id" />
         </div>
       </div>
     </div>
 
     <!-- Tutorings -->
-    <div v-if="tutorings.length" class="mt-4 space-y-2">
+    <div v-if="tutorings.length" :class="compact ? 'mt-3 space-y-1.5' : 'mt-4 space-y-2'">
       <p class="text-xs font-semibold text-[var(--color-text-muted)] uppercase tracking-wide">Tutorías</p>
       <div
         v-for="session in tutorings"
         :key="session.$id"
-        class="border border-[var(--color-border)] rounded-xl p-3 bg-[var(--color-surface-raised)]"
+        class="border border-[var(--color-border)] rounded-xl bg-[var(--color-surface-raised)]"
+        :class="compact ? 'p-2.5' : 'p-3'"
       >
         <p class="text-xs font-medium text-[var(--color-text)]">
           {{ subjectName(session.subject_id) }} · {{ sessionTime(session.date) }}
@@ -81,6 +82,7 @@ const props = defineProps<{
   topics: Topic[]
   tutorings: TutoringSession[]
   subjects: Record<string, Subject>
+  compact?: boolean
 }>()
 
 const emit = defineEmits<{

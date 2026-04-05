@@ -75,28 +75,49 @@
                   Nota media: <strong class="text-[var(--color-text)]">{{ semesterAvgById[s.$id] != null ? semesterAvgById[s.$id]!.toFixed(2) : '—' }}</strong>
                 </p>
               </div>
-              <div v-if="s.is_active" class="flex items-center gap-2 shrink-0">
-                <span class="text-xs bg-[var(--color-primary)]/20 text-[var(--color-primary)] px-2 py-0.5 rounded-full font-medium">activo</span>
+              <button
+                @click="editingSemester = s"
+                class="text-xs text-[var(--color-text-muted)] hover:text-[var(--color-text)] hover:underline shrink-0 flex items-center gap-1"
+              >
+                <Pencil :size="12" />
+                Editar
+              </button>
+              <div class="flex items-center gap-2 shrink-0">
+                <span
+                  class="text-xs px-2 py-0.5 rounded-full font-medium"
+                  :class="s.is_active
+                    ? 'bg-[var(--color-primary)]/20 text-[var(--color-primary)]'
+                    : 'bg-[var(--color-text-muted)]/15 text-[var(--color-text-muted)]'"
+                >
+                  {{ s.is_active ? 'activo' : 'finalizado' }}
+                </span>
                 <button
+                  v-if="s.is_active"
                   @click="finishSemester(s.$id)"
                   class="text-xs text-[var(--color-text-muted)] hover:text-[var(--color-text)] hover:underline"
                 >
                   Finalizar
                 </button>
+                <button
+                  v-else
+                  @click="semesterStore.setActive(s.$id)"
+                  class="text-xs text-[var(--color-primary)] hover:underline shrink-0"
+                >
+                  Activar
+                </button>
               </div>
-              <button
-                v-else
-                @click="semesterStore.setActive(s.$id)"
-                class="text-xs text-[var(--color-primary)] hover:underline shrink-0"
-              >
-                Activar
-              </button>
             </div>
 
-            <!-- Create new semester form -->
+            <!-- Create or edit semester form -->
             <div class="pt-2 border-t border-[var(--color-border)]">
-              <p class="text-xs font-semibold text-[var(--color-text-muted)] uppercase tracking-wide mb-3">Nuevo semestre</p>
-              <SemesterForm @saved="onSemesterSaved" @cancel="showSemesters = false" />
+              <p class="text-xs font-semibold text-[var(--color-text-muted)] uppercase tracking-wide mb-3">
+                {{ editingSemester ? 'Editar semestre' : 'Nuevo semestre' }}
+              </p>
+              <SemesterForm
+                :semester="editingSemester ?? undefined"
+                @saved="onSemesterSaved"
+                @cancel="editingSemester ? editingSemester = null : showSemesters = false"
+              />
             </div>
           </div>
         </div>
@@ -107,7 +128,7 @@
 
 <script setup lang="ts">
 import { ref, onMounted, computed } from 'vue'
-import { GraduationCap, X } from 'lucide-vue-next'
+import { GraduationCap, Pencil, X } from 'lucide-vue-next'
 import { useSemesterStore } from '@/stores/semester'
 import { useSubjectStore } from '@/stores/subject'
 import { useTopicStore } from '@/stores/topic'
@@ -117,7 +138,7 @@ import { usePlannerStore } from '@/stores/planner'
 import { useStudySessionStore } from '@/stores/study-session'
 import { useAuthStore } from '@/stores/auth'
 import { subjectCol } from '@/lib/collections'
-import type { Subject } from '@/types'
+import type { Semester, Subject } from '@/types'
 import UpcomingPecs from '@/components/dashboard/UpcomingPecs.vue'
 import UpcomingExams from '@/components/dashboard/UpcomingExams.vue'
 import SubjectProgressList from '@/components/dashboard/SubjectProgressList.vue'
@@ -141,6 +162,7 @@ const authStore = useAuthStore()
 
 const showSemesters = ref(false)
 const allSubjects = ref<Subject[]>([])
+const editingSemester = ref<Semester | null>(null)
 
 function bestExamGrade(subject: Subject): number | null {
   const grades = [subject.grade_exam_c1, subject.grade_exam_c2].filter((g): g is number => g != null)
@@ -181,7 +203,7 @@ async function onSemesterSaved() {
   await semesterStore.fetchAll()
   await subjectStore.fetchActive()
   allSubjects.value = await subjectCol.listByUser(authStore.userId)
-  showSemesters.value = false
+  editingSemester.value = null
 }
 
 async function finishSemester(id: string) {
