@@ -9,7 +9,7 @@
           </p>
         </div>
         <span class="text-[11px] px-2.5 py-1 rounded-full bg-[var(--color-surface-raised)] border border-[var(--color-border)] text-[var(--color-text-muted)]">
-          {{ visibleDays.length }} días
+          {{ agendaDays.length }} días
         </span>
       </div>
 
@@ -39,7 +39,7 @@
       </div>
     </div>
 
-    <div class="max-h-[calc(100vh-17rem)] overflow-y-auto pr-1 space-y-4">
+    <div v-if="agendaDays.length" class="max-h-[calc(100vh-17rem)] overflow-y-auto pr-1 space-y-4">
       <section v-for="week in agendaWeeks" :key="week.key" class="space-y-2">
         <header class="sticky top-0 z-10 rounded-xl border border-[var(--color-border)] bg-[var(--color-surface)]/95 backdrop-blur px-3 py-2">
           <p class="text-[11px] uppercase tracking-wide text-[var(--color-text-muted)]">Semana</p>
@@ -150,6 +150,11 @@
         </section>
       </section>
     </div>
+
+    <div v-else class="rounded-xl border border-dashed border-[var(--color-border)] text-center py-10 px-4">
+      <p class="text-sm font-medium text-[var(--color-text)]">No hay resultados para este filtro</p>
+      <p class="text-xs text-[var(--color-text-muted)] mt-1">Prueba cambiando el mes o mostrando todo.</p>
+    </div>
   </div>
 </template>
 
@@ -180,9 +185,11 @@ const visibleDays = computed(() =>
   planner.monthCalendarDays.filter((day) => isSameMonth(day, planner.currentMonth))
 )
 
+const agendaDays = computed(() => visibleDays.value.filter((day) => shouldIncludeDay(day)))
+
 const agendaWeeks = computed(() => {
   const groups: Array<{ key: string; label: string; days: Date[] }> = []
-  for (const day of visibleDays.value) {
+  for (const day of agendaDays.value) {
     const weekStart = startOfWeek(day, { weekStartsOn: 1 })
     const weekEnd = endOfWeek(day, { weekStartsOn: 1 })
     const key = format(weekStart, 'yyyy-MM-dd')
@@ -260,6 +267,20 @@ function tutoringsForDay(day: Date) {
   return planner.tutoringsForDay(day, 'month')
 }
 
+function hasTasks(day: Date): boolean {
+  return topicsForDay(day).length > 0
+}
+
+function hasTutorings(day: Date): boolean {
+  return tutoringsForDay(day).length > 0
+}
+
+function shouldIncludeDay(day: Date): boolean {
+  if (filterMode.value === 'tasks') return hasTasks(day)
+  if (filterMode.value === 'tutorings') return hasTutorings(day)
+  return true
+}
+
 function subjectName(subjectId: string): string {
   return props.subjects[subjectId]?.name ?? 'Asignatura'
 }
@@ -277,9 +298,9 @@ function topicStatusLabel(status: string): string {
 }
 
 function isDayEmpty(day: Date): boolean {
-  const hasTasks = showTasks.value && topicsForDay(day).length > 0
-  const hasTutorings = showTutorings.value && tutoringsForDay(day).length > 0
-  return !hasTasks && !hasTutorings
+  const tasksVisible = showTasks.value && hasTasks(day)
+  const tutoringsVisible = showTutorings.value && hasTutorings(day)
+  return !tasksVisible && !tutoringsVisible
 }
 
 function onMonthChange(event: Event) {
