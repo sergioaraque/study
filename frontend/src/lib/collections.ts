@@ -259,6 +259,18 @@ export const tutoringCol = {
         .sort((a, b) => b.date.localeCompare(a.date))
     ),
 
+  listByDateRange: (userId: string, fromDay: string, toDay: string) =>
+    databases.listDocuments(DB(), COL.tutoringSessions(), [
+      Query.equal('user_id', userId),
+      Query.greaterThanEqual('date', `${fromDay}T00:00:00.000Z`),
+      Query.lessThanEqual('date', `${toDay}T23:59:59.999Z`),
+      Query.limit(200),
+    ]).then((r: Models.DocumentList<Models.Document>) =>
+      r.documents
+        .map((d: Models.Document) => doc<TutoringSession>(d))
+        .sort((a, b) => a.date.localeCompare(b.date))
+    ),
+
   create: (data: Omit<TutoringSession, '$id' | '$createdAt' | '$updatedAt'>) =>
     databases.createDocument(DB(), COL.tutoringSessions(), ID.unique(), data).then((d: Models.Document) => doc<TutoringSession>(d)),
 

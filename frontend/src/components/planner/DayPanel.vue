@@ -45,8 +45,23 @@
       </div>
     </div>
 
-    <div v-else class="text-center py-12 text-sm text-[var(--color-text-muted)]">
-      No hay temas asignados a este día.
+    <!-- Tutorings -->
+    <div v-if="tutorings.length" class="mt-4 space-y-2">
+      <p class="text-xs font-semibold text-[var(--color-text-muted)] uppercase tracking-wide">Tutorías</p>
+      <div
+        v-for="session in tutorings"
+        :key="session.$id"
+        class="border border-[var(--color-border)] rounded-xl p-3 bg-[var(--color-surface-raised)]"
+      >
+        <p class="text-xs font-medium text-[var(--color-text)]">
+          {{ subjectName(session.subject_id) }} · {{ sessionTime(session.date) }}
+        </p>
+        <p v-if="session.notes" class="text-xs text-[var(--color-text-muted)] mt-1 whitespace-pre-line">{{ session.notes }}</p>
+      </div>
+    </div>
+
+    <div v-if="!topics.length && !tutorings.length" class="text-center py-12 text-sm text-[var(--color-text-muted)]">
+      No hay tareas ni tutorías asignadas a este día.
     </div>
   </BaseSidepanel>
 </template>
@@ -58,12 +73,13 @@ import { es } from 'date-fns/locale'
 import { AlertCircle } from 'lucide-vue-next'
 import BaseSidepanel from '@/components/ui/BaseSidepanel.vue'
 import TopicTaskList from '@/components/topics/TopicTaskList.vue'
-import type { Topic, Subject } from '@/types'
+import type { Topic, Subject, TutoringSession } from '@/types'
 
 const props = defineProps<{
   open: boolean
   day: Date | null
   topics: Topic[]
+  tutorings: TutoringSession[]
   subjects: Record<string, Subject>
 }>()
 
@@ -94,5 +110,13 @@ function movePendingToToday() {
   for (const topic of pendingTopics.value) {
     emit('move-to-today', topic.$id, topic.subject_id)
   }
+}
+
+function subjectName(subjectId: string): string {
+  return props.subjects[subjectId]?.name ?? 'Asignatura'
+}
+
+function sessionTime(value: string): string {
+  return format(new Date(value), 'HH:mm')
 }
 </script>

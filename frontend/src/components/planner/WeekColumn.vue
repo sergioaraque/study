@@ -42,6 +42,15 @@
         :subject="subjects[topic.subject_id]"
         @remove="$emit('remove', topic.$id, topic.subject_id)"
       />
+
+      <div
+        v-for="session in tutorings"
+        :key="session.$id"
+        class="px-2 py-1.5 rounded-md border border-[var(--color-border)] bg-[var(--color-surface-raised)]"
+      >
+        <p class="text-[10px] font-semibold text-[var(--color-text)] leading-tight">Tutoría</p>
+        <p class="text-[10px] text-[var(--color-text-muted)] leading-tight">{{ subjectName(session.subject_id) }} · {{ formatTime(session.date) }}</p>
+      </div>
     </div>
   </div>
 </template>
@@ -51,11 +60,12 @@ import { ref, computed } from 'vue'
 import { format, isToday as dateFnsIsToday, isBefore, startOfDay } from 'date-fns'
 import { es } from 'date-fns/locale'
 import TopicDraggable from './TopicDraggable.vue'
-import type { Topic, Subject } from '@/types'
+import type { Topic, Subject, TutoringSession } from '@/types'
 
 const props = defineProps<{
   day: Date
   topics: Topic[]
+  tutorings: TutoringSession[]
   subjects: Record<string, Subject>
   availableHours?: number
 }>()
@@ -91,5 +101,13 @@ function onDrop(e: DragEvent) {
   if (!data) return
   const { topicId, subjectId } = JSON.parse(data) as { topicId: string; subjectId: string }
   emit('drop', topicId, subjectId)
+}
+
+function subjectName(subjectId: string): string {
+  return props.subjects[subjectId]?.name ?? 'Asignatura'
+}
+
+function formatTime(value: string): string {
+  return format(new Date(value), 'HH:mm')
 }
 </script>

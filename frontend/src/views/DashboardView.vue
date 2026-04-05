@@ -71,8 +71,19 @@
               <div class="flex-1 min-w-0">
                 <p class="text-sm font-medium text-[var(--color-text)] truncate">{{ s.name }}</p>
                 <p class="text-xs text-[var(--color-text-muted)]">{{ s.start_date?.slice(0, 10) }} → {{ s.end_date?.slice(0, 10) }}</p>
+                <p class="text-xs text-[var(--color-text-muted)] mt-0.5">
+                  Nota media: <strong class="text-[var(--color-text)]">{{ semesterAvgById[s.$id] != null ? semesterAvgById[s.$id]!.toFixed(2) : '—' }}</strong>
+                </p>
               </div>
-              <span v-if="s.is_active" class="text-xs bg-[var(--color-primary)]/20 text-[var(--color-primary)] px-2 py-0.5 rounded-full font-medium shrink-0">activo</span>
+              <div v-if="s.is_active" class="flex items-center gap-2 shrink-0">
+                <span class="text-xs bg-[var(--color-primary)]/20 text-[var(--color-primary)] px-2 py-0.5 rounded-full font-medium">activo</span>
+                <button
+                  @click="finishSemester(s.$id)"
+                  class="text-xs text-[var(--color-text-muted)] hover:text-[var(--color-text)] hover:underline"
+                >
+                  Finalizar
+                </button>
+              </div>
               <button
                 v-else
                 @click="semesterStore.setActive(s.$id)"
@@ -95,7 +106,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted } from 'vue'
+import { ref, onMounted, computed } from 'vue'
 import { GraduationCap, X } from 'lucide-vue-next'
 import { useSemesterStore } from '@/stores/semester'
 import { useSubjectStore } from '@/stores/subject'
@@ -104,6 +115,9 @@ import { usePecStore } from '@/stores/pec'
 import { useExamStore } from '@/stores/exam'
 import { usePlannerStore } from '@/stores/planner'
 import { useStudySessionStore } from '@/stores/study-session'
+import { useAuthStore } from '@/stores/auth'
+import { subjectCol } from '@/lib/collections'
+import type { Subject } from '@/types'
 import UpcomingPecs from '@/components/dashboard/UpcomingPecs.vue'
 import UpcomingExams from '@/components/dashboard/UpcomingExams.vue'
 import SubjectProgressList from '@/components/dashboard/SubjectProgressList.vue'
@@ -123,17 +137,62 @@ const pecStore = usePecStore()
 const examStore = useExamStore()
 const plannerStore = usePlannerStore()
 const sessionStore = useStudySessionStore()
+const authStore = useAuthStore()
 
 const showSemesters = ref(false)
+const allSubjects = ref<Subject[]>([])
+
+function bestExamGrade(subject: Subject): number | null {
+  const grades = [subject.grade_exam_c1, subject.grade_exam_c2].filter((g): g is number => g != null)
+  return grades.length ? Math.max(...grades) : null
+}
+
+function computedFinal(subject: Subject): number | null {
+  const pec = subject.grade_pec
+  const exam = bestExamGrade(subject)
+  if (exam == null) return null
+  if (pec == null) return exam
+  return subject.pec_weight * pec + (1 - subject.pec_weight) * exam
+}
+
+function effectiveFinal(subject: Subject): number | null {
+  return subject.grade_final ?? computedFinal(subject)
+}
+
+const semesterAvgById = computed<Record<string, number | null>>(() => {
+  const map: Record<string, number | null> = {}
+  for (const semester of semesterStore.semesters) {
+    const graded = allSubjects.value.filter((subject) => {
+      if (subject.semester_id !== semester.$id) return false
+      return effectiveFinal(subject) != null
+    })
+    if (!graded.length) {
+      map[semester.$id] = null
+      continue
+    }
+    const weighted = graded.reduce((sum, subject) => sum + (effectiveFinal(subject) ?? 0) * subject.credits, 0)
+    const credits = graded.reduce((sum, subject) => sum + subject.credits, 0)
+    map[semester.$id] = credits > 0 ? weighted / credits : null
+  }
+  return map
+})
 
 async function onSemesterSaved() {
   await semesterStore.fetchAll()
   await subjectStore.fetchActive()
+  allSubjects.value = await subjectCol.listByUser(authStore.userId)
   showSemesters.value = false
+}
+
+async function finishSemester(id: string) {
+  if (!window.confirm('¿Seguro que quieres finalizar este semestre? Podrás reactivarlo después.')) return
+  await semesterStore.archive(id)
+  await Promise.all([semesterStore.fetchAll(), subjectStore.fetchActive()])
 }
 
 onMounted(async () => {
   await Promise.all([semesterStore.fetchAll(), subjectStore.fetchActive()])
+  allSubjects.value = await subjectCol.listByUser(authStore.userId)
   await Promise.all([
     ...subjectStore.subjects.map((s) => topicStore.fetchBySubject(s.$id)),
     pecStore.fetchUpcoming(),

@@ -1,6 +1,29 @@
 <template>
   <form @submit.prevent="handleSubmit" class="space-y-4">
     <BaseInput v-model="form.date" label="Fecha" type="datetime-local" required />
+    <div v-if="!session" class="space-y-3 p-3 rounded-lg border border-[var(--color-border)] bg-[var(--color-surface-raised)]">
+      <div>
+        <label class="block text-xs font-medium text-[var(--color-text-muted)] mb-1">Periodicidad</label>
+        <select
+          v-model="form.periodicity"
+          class="w-full px-3 py-2 rounded-lg bg-[var(--color-surface-2)] border border-[var(--color-border)] text-[var(--color-text)] text-sm focus:outline-none focus:border-[var(--color-primary)] transition-colors"
+        >
+          <option value="none">Sin repetir</option>
+          <option value="weekly">Semanal</option>
+          <option value="biweekly">Cada 2 semanas</option>
+        </select>
+      </div>
+      <BaseInput
+        v-if="form.periodicity !== 'none'"
+        v-model="form.recurrence_end_date"
+        label="Fin de periodicidad"
+        type="datetime-local"
+        required
+      />
+      <p v-if="form.periodicity !== 'none'" class="text-xs text-[var(--color-text-muted)]">
+        Se crearán automáticamente todas las tutorías desde la fecha inicial hasta la fecha de fin.
+      </p>
+    </div>
     <div>
       <label class="block text-xs font-medium text-[var(--color-text-muted)] mb-1">Notas de la sesión</label>
       <textarea v-model="form.notes" rows="5" placeholder="¿Qué se explicó?"
@@ -33,7 +56,7 @@ import { X } from 'lucide-vue-next'
 import { useTutoringStore } from '@/stores/tutoring'
 import BaseInput from '@/components/ui/BaseInput.vue'
 import BaseButton from '@/components/ui/BaseButton.vue'
-import type { TutoringSession } from '@/types'
+import type { TutoringPeriodicity, TutoringSession } from '@/types'
 
 const props = defineProps<{ session: TutoringSession | null; subjectId: string; userId: string }>()
 const emit = defineEmits<{ saved: []; cancel: [] }>()
@@ -42,25 +65,70 @@ const tutoringStore = useTutoringStore()
 const saving = ref(false)
 const error = ref('')
 const tasks = ref<string[]>([])
-const form = ref({ date: '', notes: '' })
+const form = ref<{ date: string; notes: string; periodicity: TutoringPeriodicity; recurrence_end_date: string }>({
+  date: '',
+  notes: '',
+  periodicity: 'none',
+  recurrence_end_date: '',
+})
 
 watch(() => props.session, (s) => {
   if (s) {
-    form.value = { date: s.date.slice(0, 16), notes: s.notes ?? '' }
+    form.value = {
+      date: s.date.slice(0, 16),
+      notes: s.notes ?? '',
+      periodicity: s.periodicity ?? 'none',
+      recurrence_end_date: s.recurrence_end_date?.slice(0, 16) ?? '',
+    }
     tasks.value = s.review_tasks ? (JSON.parse(s.review_tasks) as string[]) : []
   } else {
-    form.value.date = new Date().toISOString().slice(0, 16)
+    form.value = {
+      date: new Date().toISOString().slice(0, 16),
+      notes: '',
+      periodicity: 'none',
+      recurrence_end_date: '',
+    }
+    tasks.value = []
   }
 }, { immediate: true })
 
 async function handleSubmit() {
   saving.value = true; error.value = ''
   try {
-    const data = { ...form.value, review_tasks: JSON.stringify(tasks.value.filter(Boolean)) }
+    if (form.value.periodicity !== 'none') {
+      if (!form.value.recurrence_end_date) {
+        throw new Error('Debes definir la fecha fin de la periodicidad')
+      }
+      if (new Date(form.value.recurrence_end_date) < new Date(form.value.date)) {
+        throw new Error('La fecha fin debe ser posterior o igual a la fecha inicial')
+      }
+    }
+
+    const baseData = {
+      date: form.value.date,
+      notes: form.value.notes,
+      review_tasks: JSON.stringify(tasks.value.filter(Boolean)),
+    }
+
     if (props.session) {
-      await tutoringStore.update(props.session.$id, props.subjectId, data)
+      await tutoringStore.update(props.session.$id, props.subjectId, baseData)
+    } else if (form.value.periodicity !== 'none') {
+      await tutoringStore.createSeries(
+        {
+          ...baseData,
+          subject_id: props.subjectId,
+          user_id: props.userId,
+        },
+        form.value.periodicity,
+        form.value.recurrence_end_date,
+      )
     } else {
-      await tutoringStore.create({ ...data, subject_id: props.subjectId, user_id: props.userId })
+      await tutoringStore.create({
+        ...baseData,
+        periodicity: 'none',
+        subject_id: props.subjectId,
+        user_id: props.userId,
+      })
     }
     emit('saved')
   } catch (err: unknown) {

@@ -1,6 +1,6 @@
 import { defineStore } from 'pinia'
 import { ref } from 'vue'
-import { examCol } from '@/lib/collections'
+import { examCol, subjectCol } from '@/lib/collections'
 import { useAuthStore } from './auth'
 import type { Exam } from '@/types'
 
@@ -10,6 +10,7 @@ export const useExamStore = defineStore('exam', () => {
 
   async function fetchBySubject(subjectId: string) {
     examsBySubject.value[subjectId] = await examCol.listBySubject(subjectId)
+    await syncSubjectExamGrades(subjectId)
   }
 
   async function fetchUpcoming() {
@@ -22,6 +23,7 @@ export const useExamStore = defineStore('exam', () => {
     const list = examsBySubject.value[data.subject_id] ?? []
     list.push(exam)
     examsBySubject.value[data.subject_id] = list
+    await syncSubjectExamGrades(data.subject_id)
     return exam
   }
 
@@ -30,6 +32,7 @@ export const useExamStore = defineStore('exam', () => {
     const list = examsBySubject.value[subjectId] ?? []
     const idx = list.findIndex((e) => e.$id === id)
     if (idx !== -1) list[idx] = updated
+    await syncSubjectExamGrades(subjectId)
     return updated
   }
 
@@ -38,6 +41,22 @@ export const useExamStore = defineStore('exam', () => {
     examsBySubject.value[subjectId] = (examsBySubject.value[subjectId] ?? []).filter(
       (e) => e.$id !== id
     )
+    await syncSubjectExamGrades(subjectId)
+  }
+
+  async function syncSubjectExamGrades(subjectId: string) {
+    const exams = examsBySubject.value[subjectId] ?? []
+    if (!exams.length) {
+      await subjectCol.update(subjectId, { grade_exam_c1: undefined, grade_exam_c2: undefined })
+      return
+    }
+
+    // Keep the most recently updated exam as source of truth for subject-level exam grades.
+    const latest = [...exams].sort((a, b) => b.$updatedAt.localeCompare(a.$updatedAt))[0]
+    await subjectCol.update(subjectId, {
+      grade_exam_c1: latest.grade_c1,
+      grade_exam_c2: latest.grade_c2,
+    })
   }
 
   function getChosenDate(exam: Exam): string | undefined {

@@ -85,6 +85,7 @@
               :key="format(day, 'yyyy-MM-dd')"
               :day="day"
               :topics="planner.topicsForDay(day, 'week')"
+              :tutorings="planner.tutoringsForDay(day, 'week')"
               :subjects="subjectMap"
               :available-hours="availableHoursForDay(day)"
               @drop="(topicId, subjectId) => planner.assignTopicToDay(topicId, subjectId, day)"
@@ -117,6 +118,7 @@
       :open="selectedDay !== null"
       :day="selectedDay"
       :topics="selectedDayTopics"
+      :tutorings="selectedDayTutorings"
       :subjects="subjectMap"
       @close="selectedDay = null"
       @move-to-today="(topicId, subjectId) => { moveToToday(topicId, subjectId); selectedDay = null }"
@@ -159,7 +161,7 @@ import { ChevronLeft, ChevronRight, ChevronDown, Clock, X } from 'lucide-vue-nex
 import { usePlannerStore } from '@/stores/planner'
 import { useSubjectStore } from '@/stores/subject'
 import { useSemesterStore } from '@/stores/semester'
-import type { WeeklySchedule } from '@/types'
+import type { TutoringSession, WeeklySchedule } from '@/types'
 import { parseSchedule } from '@/stores/semester'
 import WeekColumn from '@/components/planner/WeekColumn.vue'
 import UnassignedPanel from '@/components/planner/UnassignedPanel.vue'
@@ -180,6 +182,9 @@ const subjectMap = computed(() => Object.fromEntries(subjectStore.subjects.map((
 
 const selectedDayTopics = computed(() =>
   selectedDay.value ? planner.topicsForDay(selectedDay.value, 'week') : []
+)
+const selectedDayTutorings = computed<TutoringSession[]>(() =>
+  selectedDay.value ? planner.tutoringsForDay(selectedDay.value, 'week') : []
 )
 
 const DAY_KEYS: Record<number, keyof WeeklySchedule> = {

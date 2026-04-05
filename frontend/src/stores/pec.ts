@@ -1,6 +1,6 @@
 import { defineStore } from 'pinia'
 import { ref } from 'vue'
-import { pecCol } from '@/lib/collections'
+import { pecCol, subjectCol } from '@/lib/collections'
 import { useAuthStore } from './auth'
 import type { Pec } from '@/types'
 
@@ -10,6 +10,7 @@ export const usePecStore = defineStore('pec', () => {
 
   async function fetchBySubject(subjectId: string) {
     pecsBySubject.value[subjectId] = await pecCol.listBySubject(subjectId)
+    await syncSubjectPecGrade(subjectId)
   }
 
   async function fetchUpcoming() {
@@ -22,6 +23,7 @@ export const usePecStore = defineStore('pec', () => {
     const list = pecsBySubject.value[data.subject_id] ?? []
     list.push(pec)
     pecsBySubject.value[data.subject_id] = list
+    await syncSubjectPecGrade(data.subject_id)
     return pec
   }
 
@@ -30,6 +32,7 @@ export const usePecStore = defineStore('pec', () => {
     const list = pecsBySubject.value[subjectId] ?? []
     const idx = list.findIndex((p) => p.$id === id)
     if (idx !== -1) list[idx] = updated
+    await syncSubjectPecGrade(subjectId)
     return updated
   }
 
@@ -38,6 +41,20 @@ export const usePecStore = defineStore('pec', () => {
     pecsBySubject.value[subjectId] = (pecsBySubject.value[subjectId] ?? []).filter(
       (p) => p.$id !== id
     )
+    await syncSubjectPecGrade(subjectId)
+  }
+
+  async function syncSubjectPecGrade(subjectId: string) {
+    const graded = (pecsBySubject.value[subjectId] ?? [])
+      .filter((p) => p.status === 'calificada' && p.grade != null)
+      .sort((a, b) => {
+        const aKey = a.due_date ?? a.$updatedAt
+        const bKey = b.due_date ?? b.$updatedAt
+        return bKey.localeCompare(aKey)
+      })
+
+    const latestGrade = graded[0]?.grade
+    await subjectCol.update(subjectId, { grade_pec: latestGrade })
   }
 
   return { pecsBySubject, upcomingPecs, fetchBySubject, fetchUpcoming, create, update, remove }

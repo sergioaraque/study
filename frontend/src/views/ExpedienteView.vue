@@ -2,9 +2,24 @@
   <div>
     <div class="flex items-center justify-between mb-6">
       <h1 class="text-xl font-semibold text-[var(--color-text)]">Expediente académico</h1>
-      <button @click="showImporter = true" class="btn-secondary flex items-center gap-1.5 text-sm">
-        <Library :size="15" /> Importar asignaturas
-      </button>
+      <div class="flex items-center gap-2">
+        <button @click="showColumnConfig = true" class="btn-secondary flex items-center gap-1.5 text-sm">
+          <SlidersHorizontal :size="15" /> Columnas
+        </button>
+        <button @click="showImporter = true" class="btn-secondary flex items-center gap-1.5 text-sm">
+          <Library :size="15" /> Importar asignaturas
+        </button>
+      </div>
+    </div>
+
+    <div
+      v-if="!isColVisible('pec') && !isColVisible('examen') && !isColVisible('notaFinal')"
+      class="mb-4 p-3 rounded-xl border border-[var(--color-warning)]/35 bg-[var(--color-warning)]/10 flex items-center justify-between gap-3"
+    >
+      <p class="text-xs text-[var(--color-text)]">
+        Tienes ocultas todas las columnas de notas.
+      </p>
+      <button class="btn-secondary text-xs" @click="showAllGradeColumns">Mostrar notas</button>
     </div>
 
     <!-- Summary cards (enrolled subjects only) -->
@@ -74,11 +89,11 @@
               <thead>
                 <tr class="border-b border-[var(--color-border)] text-xs text-[var(--color-text-muted)]">
                   <th class="text-left px-4 py-2.5 font-medium">Asignatura</th>
-                  <th class="text-center px-3 py-2.5 font-medium">ECTS</th>
-                  <th class="text-center px-3 py-2.5 font-medium">Estado</th>
-                  <th class="text-center px-3 py-2.5 font-medium">PECs</th>
-                  <th class="text-center px-3 py-2.5 font-medium">Examen</th>
-                  <th class="text-center px-3 py-2.5 font-medium">Nota final</th>
+                  <th v-if="isColVisible('ects')" class="text-center px-3 py-2.5 font-medium">ECTS</th>
+                  <th v-if="isColVisible('estado')" class="text-center px-3 py-2.5 font-medium">Estado</th>
+                  <th v-if="isColVisible('pec')" class="text-center px-3 py-2.5 font-medium">PECs</th>
+                  <th v-if="isColVisible('examen')" class="text-center px-3 py-2.5 font-medium">Examen</th>
+                  <th v-if="isColVisible('notaFinal')" class="text-center px-3 py-2.5 font-medium">Nota final</th>
                   <th class="px-2 py-2.5" />
                 </tr>
               </thead>
@@ -98,28 +113,28 @@
                       {{ subject.description }}
                     </p>
                   </td>
-                  <td class="px-3 py-3 text-center">
+                  <td v-if="isColVisible('ects')" class="px-3 py-3 text-center">
                     <span class="text-sm font-medium text-[var(--color-text)]">{{ subject.credits }}</span>
                   </td>
-                  <td class="px-3 py-3 text-center">
+                  <td v-if="isColVisible('estado')" class="px-3 py-3 text-center">
                     <span class="text-xs px-2 py-0.5 rounded-full font-medium" :class="statusClass(subject.status)">
                       {{ subject.status }}
                     </span>
                   </td>
-                  <td class="px-3 py-3 text-center">
+                  <td v-if="isColVisible('pec')" class="px-3 py-3 text-center">
                     <span v-if="subject.grade_pec != null" class="text-sm" :class="gradeClass(subject.grade_pec)">
                       {{ subject.grade_pec.toFixed(1) }}
                     </span>
                     <span v-else class="text-xs text-[var(--color-text-muted)]">—</span>
                   </td>
-                  <td class="px-3 py-3 text-center">
+                  <td v-if="isColVisible('examen')" class="px-3 py-3 text-center">
                     <span v-if="bestExamGrade(subject) != null" class="text-sm" :class="gradeClass(bestExamGrade(subject)!)">
                       {{ bestExamGrade(subject)!.toFixed(1) }}
                     </span>
                     <span v-else class="text-xs text-[var(--color-text-muted)]">—</span>
                   </td>
                   <!-- Final grade (editable) -->
-                  <td class="px-3 py-3 text-center">
+                  <td v-if="isColVisible('notaFinal')" class="px-3 py-3 text-center">
                     <button
                       v-if="editingId !== subject.$id"
                       @click="startEdit(subject)"
@@ -176,11 +191,11 @@
               <tfoot>
                 <tr class="bg-[var(--color-surface-raised)] text-xs text-[var(--color-text-muted)]">
                   <td class="px-4 py-2 font-medium text-[var(--color-text)]">Total semestre</td>
-                  <td class="px-3 py-2 text-center font-semibold text-[var(--color-text)]">{{ semesterTotalCredits(sem.$id) }}</td>
-                  <td class="px-3 py-2 text-center">
+                  <td v-if="isColVisible('ects')" class="px-3 py-2 text-center font-semibold text-[var(--color-text)]">{{ semesterTotalCredits(sem.$id) }}</td>
+                  <td v-if="isColVisible('estado')" class="px-3 py-2 text-center">
                     <span class="text-[var(--color-success)] font-medium">{{ semesterPassedCredits(sem.$id) }} superados</span>
                   </td>
-                  <td colspan="4" class="px-3 py-2 text-center">
+                  <td :colspan="footerTailColspan" class="px-3 py-2 text-center">
                     <span v-if="semesterAvg(sem.$id) !== null">
                       Media: <strong class="text-[var(--color-text)]">{{ semesterAvg(sem.$id)!.toFixed(2) }}</strong>
                     </span>
@@ -272,14 +287,35 @@
       <SubjectImporter @saved="onImported" @cancel="showImporter = false" />
     </BaseSidepanel>
 
+    <!-- Column visibility sidepanel -->
+    <BaseSidepanel :open="showColumnConfig" @close="showColumnConfig = false" title="Columnas del expediente">
+      <div class="space-y-3">
+        <p class="text-xs text-[var(--color-text-muted)]">Activa o desactiva las columnas que quieres ver en la tabla.</p>
+        <label
+          v-for="option in columnOptions"
+          :key="option.key"
+          class="flex items-center justify-between p-3 rounded-xl border border-[var(--color-border)] bg-[var(--color-surface)]"
+        >
+          <span class="text-sm text-[var(--color-text)]">{{ option.label }}</span>
+          <input v-model="visibleColumns[option.key]" type="checkbox" class="h-4 w-4 accent-[var(--color-primary)]" />
+        </label>
+        <button
+          class="btn-secondary text-sm w-full"
+          @click="resetColumns"
+        >
+          Restablecer columnas
+        </button>
+      </div>
+    </BaseSidepanel>
+
     <!-- Click outside to close menus -->
     <div v-if="menuOpenId" class="fixed inset-0 z-0" @click="menuOpenId = null" />
   </div>
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onMounted, nextTick } from 'vue'
-import { Pencil, Library, MoreVertical, ArrowLeftRight, ChevronDown } from 'lucide-vue-next'
+import { ref, computed, onMounted, nextTick, watch } from 'vue'
+import { Pencil, Library, MoreVertical, ArrowLeftRight, ChevronDown, SlidersHorizontal } from 'lucide-vue-next'
 import { useSemesterStore } from '@/stores/semester'
 import { useAuthStore } from '@/stores/auth'
 import { subjectCol } from '@/lib/collections'
@@ -292,9 +328,51 @@ const auth = useAuthStore()
 
 const loading = ref(true)
 const showImporter = ref(false)
+const showColumnConfig = ref(false)
 const allSubjects = ref<Subject[]>([])
 const menuOpenId = ref<string | null>(null)
 const changeSemesterTarget = ref<Subject | null>(null)
+
+type ColumnKey = 'ects' | 'estado' | 'pec' | 'examen' | 'notaFinal'
+const COLUMN_PREFS_KEY = 'study.expediente.columns.v1'
+const defaultColumns: Record<ColumnKey, boolean> = {
+  ects: true,
+  estado: true,
+  pec: true,
+  examen: true,
+  notaFinal: false,
+}
+const visibleColumns = ref<Record<ColumnKey, boolean>>({ ...defaultColumns })
+const columnOptions: Array<{ key: ColumnKey; label: string }> = [
+  { key: 'ects', label: 'ECTS' },
+  { key: 'estado', label: 'Estado' },
+  { key: 'pec', label: 'PECs' },
+  { key: 'examen', label: 'Examen' },
+  { key: 'notaFinal', label: 'Nota final' },
+]
+const footerTailColspan = computed(() =>
+  1
+  + (visibleColumns.value.pec ? 1 : 0)
+  + (visibleColumns.value.examen ? 1 : 0)
+  + (visibleColumns.value.notaFinal ? 1 : 0)
+)
+
+function isColVisible(key: ColumnKey): boolean {
+  return visibleColumns.value[key]
+}
+
+function resetColumns() {
+  visibleColumns.value = { ...defaultColumns }
+}
+
+function showAllGradeColumns() {
+  visibleColumns.value = {
+    ...visibleColumns.value,
+    pec: true,
+    examen: true,
+    notaFinal: true,
+  }
+}
 
 // Enrolled subjects (have a semester)
 const enrolledSubjects = computed(() => allSubjects.value.filter((s) => !!s.semester_id))
@@ -329,7 +407,8 @@ function bestExamGrade(s: Subject): number | null {
 function computedFinal(s: Subject): number | null {
   const pec = s.grade_pec
   const exam = bestExamGrade(s)
-  if (pec == null || exam == null) return null
+  if (exam == null) return null
+  if (pec == null) return exam
   return s.pec_weight * pec + (1 - s.pec_weight) * exam
 }
 
@@ -451,8 +530,22 @@ async function onImported() {
 // ── Init ──────────────────────────────────────────────────────────────────────
 
 onMounted(async () => {
+  const savedColumns = localStorage.getItem(COLUMN_PREFS_KEY)
+  if (savedColumns) {
+    try {
+      const parsed = JSON.parse(savedColumns) as Partial<Record<ColumnKey, boolean>>
+      visibleColumns.value = { ...defaultColumns, ...parsed }
+    } catch {
+      visibleColumns.value = { ...defaultColumns }
+    }
+  }
+
   await semesterStore.fetchAll()
   allSubjects.value = await subjectCol.listByUser(auth.userId)
   loading.value = false
 })
+
+watch(visibleColumns, (value) => {
+  localStorage.setItem(COLUMN_PREFS_KEY, JSON.stringify(value))
+}, { deep: true })
 </script>

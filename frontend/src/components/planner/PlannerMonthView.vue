@@ -66,6 +66,15 @@
               class="ml-auto shrink-0 opacity-50 hover:opacity-100"
             >×</button>
           </div>
+          <div
+            v-for="session in planner.tutoringsForDay(day, 'month')"
+            :key="session.$id"
+            class="flex items-center gap-1 px-1.5 py-0.5 rounded text-[10px] border border-[var(--color-border)] bg-[var(--color-surface-raised)] text-[var(--color-text)]"
+            :title="`Tutoría ${subjectName(session.subject_id)} ${format(new Date(session.date), 'HH:mm')}`"
+          >
+            <span class="w-1.5 h-1.5 rounded-full shrink-0 bg-[var(--color-primary)]" />
+            <span class="truncate">Tutoría {{ format(new Date(session.date), 'HH:mm') }}</span>
+          </div>
         </div>
       </div>
     </div>
@@ -101,6 +110,10 @@ function subjectColor(subjectId: string): string {
   const keys = Object.keys(props.subjects)
   const idx = keys.indexOf(subjectId)
   return PALETTE[(idx >= 0 ? idx : Math.abs(hashStr(subjectId))) % PALETTE.length]
+}
+
+function subjectName(subjectId: string): string {
+  return props.subjects[subjectId]?.name ?? 'Asignatura'
 }
 
 function hashStr(s: string): number {

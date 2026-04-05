@@ -1,6 +1,6 @@
 import { defineStore } from 'pinia'
 import { ref, computed } from 'vue'
-import { topicCol } from '@/lib/collections'
+import { topicCol, tutoringCol } from '@/lib/collections'
 import { useAuthStore } from './auth'
 import { useTopicStore } from './topic'
 import {
@@ -9,13 +9,15 @@ import {
   startOfMonth, endOfMonth, getDay,
 } from 'date-fns'
 import { es } from 'date-fns/locale'
-import type { Topic } from '@/types'
+import type { Topic, TutoringSession } from '@/types'
 
 export const usePlannerStore = defineStore('planner', () => {
   const currentWeekStart = ref(startOfWeek(new Date(), { weekStartsOn: 1 }))
   const currentMonth = ref(startOfMonth(new Date()))
   const weekTopics = ref<Topic[]>([])
   const monthTopics = ref<Topic[]>([])
+  const weekTutorings = ref<TutoringSession[]>([])
+  const monthTutorings = ref<TutoringSession[]>([])
   const overdueTopics = ref<Topic[]>([])
   const loading = ref(false)
 
@@ -49,7 +51,12 @@ export const usePlannerStore = defineStore('planner', () => {
     try {
       const from = format(currentWeekStart.value, 'yyyy-MM-dd')
       const to = format(addDays(currentWeekStart.value, 6), 'yyyy-MM-dd')
-      weekTopics.value = await topicCol.listByPlannerDay(from, to, auth.userId)
+      const [topics, tutorings] = await Promise.all([
+        topicCol.listByPlannerDay(from, to, auth.userId),
+        tutoringCol.listByDateRange(auth.userId, from, to),
+      ])
+      weekTopics.value = topics
+      weekTutorings.value = tutorings
     } finally {
       loading.value = false
     }
@@ -69,7 +76,12 @@ export const usePlannerStore = defineStore('planner', () => {
       const gridDays = monthCalendarDays.value
       const from = format(gridDays[0], 'yyyy-MM-dd')
       const to = format(gridDays[gridDays.length - 1], 'yyyy-MM-dd')
-      monthTopics.value = await topicCol.listByPlannerDay(from, to, auth.userId)
+      const [topics, tutorings] = await Promise.all([
+        topicCol.listByPlannerDay(from, to, auth.userId),
+        tutoringCol.listByDateRange(auth.userId, from, to),
+      ])
+      monthTopics.value = topics
+      monthTutorings.value = tutorings
     } finally {
       loading.value = false
     }
@@ -79,6 +91,12 @@ export const usePlannerStore = defineStore('planner', () => {
     const dayStr = format(day, 'yyyy-MM-dd')
     const list = source === 'month' ? monthTopics.value : weekTopics.value
     return list.filter((t) => t.planner_day === dayStr)
+  }
+
+  function tutoringsForDay(day: Date, source: 'week' | 'month' = 'week'): TutoringSession[] {
+    const dayStr = format(day, 'yyyy-MM-dd')
+    const list = source === 'month' ? monthTutorings.value : weekTutorings.value
+    return list.filter((session) => format(new Date(session.date), 'yyyy-MM-dd') === dayStr)
   }
 
   async function assignTopicToDay(topicId: string, subjectId: string, day: Date | null) {
@@ -122,9 +140,9 @@ export const usePlannerStore = defineStore('planner', () => {
   }
 
   return {
-    currentWeekStart, currentMonth, weekTopics, monthTopics, overdueTopics, loading,
+    currentWeekStart, currentMonth, weekTopics, monthTopics, weekTutorings, monthTutorings, overdueTopics, loading,
     weekDays, weekLabel, monthLabel, monthCalendarDays,
-    fetchWeek, fetchMonth, fetchOverdue, topicsForDay, assignTopicToDay,
+    fetchWeek, fetchMonth, fetchOverdue, topicsForDay, tutoringsForDay, assignTopicToDay,
     prevWeek, nextWeek, goToCurrentWeek,
     prevMonth, nextMonth, goToCurrentMonth,
   }

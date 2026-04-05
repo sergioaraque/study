@@ -111,10 +111,16 @@ export interface TopicTask extends AppwriteDoc {
   order: number
 }
 
+export type TutoringPeriodicity = 'none' | 'weekly' | 'biweekly'
+
 export interface TutoringSession extends AppwriteDoc {
   subject_id: string
   user_id: string
   date: string
   notes?: string
   review_tasks?: string   // JSON array of strings
+  periodicity?: TutoringPeriodicity
+  recurrence_end_date?: string
+  series_id?: string
+  series_position?: number
 }

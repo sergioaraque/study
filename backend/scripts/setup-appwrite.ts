@@ -210,9 +210,14 @@ async function main() {
   await datetime('tutoring_sessions', 'date', true)
   await str('tutoring_sessions', 'notes', 10000)
   await str('tutoring_sessions', 'review_tasks', 5000)
+  await str('tutoring_sessions', 'periodicity', 20, false, 'none')
+  await datetime('tutoring_sessions', 'recurrence_end_date')
+  await str('tutoring_sessions', 'series_id', 64)
+  await int('tutoring_sessions', 'series_position')
   await index('tutoring_sessions', 'idx_subject', IndexType.Key, ['subject_id'])
   await index('tutoring_sessions', 'idx_user', IndexType.Key, ['user_id'])
   await index('tutoring_sessions', 'idx_date', IndexType.Key, ['date'])
+  await index('tutoring_sessions', 'idx_series_id', IndexType.Key, ['series_id'])
 
   // ── topic_tasks ────────────────────────────────────────
   await createCollection('topic_tasks', 'Topic Tasks')

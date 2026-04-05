@@ -21,7 +21,11 @@ export const useSubjectStore = defineStore('subject', () => {
 
   async function fetchActive() {
     const semester = useSemesterStore().activeSemester
-    if (semester) await fetchBySemester(semester.$id)
+    if (semester) {
+      await fetchBySemester(semester.$id)
+      return
+    }
+    subjects.value = []
   }
 
   async function fetchLibrary() {
