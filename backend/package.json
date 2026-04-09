@@ -10,7 +10,7 @@
     "setup-appwrite": "node --env-file=.env --import tsx/esm scripts/setup-appwrite.ts"
   },
   "dependencies": {
-    "@hono/node-server": "^1.14.0",
+    "@hono/node-server": "^1.19.13",
     "@hono/zod-validator": "^0.7.6",
     "hono": "^4.12.12",
     "node-appwrite": "^14.0.0",
