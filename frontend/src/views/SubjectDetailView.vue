@@ -38,7 +38,13 @@
     </div>
 
     <!-- Tab content -->
-    <TopicsTab v-if="activeTab === 'topics'" :subject-id="subject.$id" :user-id="subject.user_id" :subject-credits="subject.credits" />
+    <TopicsTab
+      v-if="activeTab === 'topics'"
+      :subject-id="subject.$id"
+      :user-id="subject.user_id"
+      :subject-credits="subject.credits"
+      :initial-status-filter="initialTopicStatus"
+    />
     <PecsTab v-else-if="activeTab === 'pecs'" :subject="subject" />
     <ExamsTab v-else-if="activeTab === 'exams'" :subject="subject" />
     <NotesTab v-else-if="activeTab === 'notes'" :subject="subject" />
@@ -65,7 +71,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onMounted } from 'vue'
+import { ref, computed, onMounted, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { ChevronLeft, Pencil } from 'lucide-vue-next'
 import { useSubjectStore } from '@/stores/subject'
@@ -95,6 +101,19 @@ const tabs = [
 ]
 
 const subject = computed(() => subjectStore.getById(route.params.id as string))
+const initialTopicStatus = computed(() => {
+  const raw = route.query.status
+  return typeof raw === 'string' ? raw : 'all'
+})
+
+watch(
+  () => route.query.tab,
+  (tab) => {
+    if (typeof tab !== 'string') return
+    if (tabs.some((t) => t.id === tab)) activeTab.value = tab
+  },
+  { immediate: true }
+)
 
 onMounted(async () => {
   await subjectStore.fetchActive()

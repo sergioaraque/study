@@ -6,7 +6,8 @@
 
     <template v-else>
       <!-- Semester selector -->
-      <div class="flex gap-2 mb-6 overflow-x-auto pb-1">
+      <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-6">
+        <div class="flex gap-2 overflow-x-auto pb-1">
         <button
           v-for="s in semesterStore.semesters"
           :key="s.$id"
@@ -18,6 +19,18 @@
         >
           {{ s.name }}
         </button>
+        </div>
+        <div class="flex items-center gap-2">
+          <span class="text-xs text-[var(--color-text-muted)]">Rango</span>
+          <select
+            v-model="rangePreset"
+            class="text-xs bg-[var(--color-surface)] border border-[var(--color-border)] rounded-lg px-2 py-1 text-[var(--color-text)]"
+          >
+            <option value="7d">7 días</option>
+            <option value="30d">30 días</option>
+            <option value="semester">Semestre</option>
+          </select>
+        </div>
       </div>
 
       <!-- Summary cards -->
@@ -56,7 +69,8 @@
           <div
             v-for="row in visualRows"
             :key="row.subject.$id"
-            class="rounded-xl border border-[var(--color-border)] bg-[var(--color-surface-raised)] p-3"
+            class="rounded-xl border border-[var(--color-border)] bg-[var(--color-surface-raised)] p-3 cursor-pointer hover:border-[var(--color-primary)]/40 transition-colors"
+            @click="openSubjectDetail(row.subject.$id, row.riskLevel)"
           >
             <div class="flex items-start justify-between gap-3 mb-3">
               <div class="min-w-0">
@@ -113,12 +127,12 @@
       <!-- Heatmap -->
       <div class="bg-[var(--color-surface)] border border-[var(--color-border)] rounded-xl overflow-hidden mb-6">
         <div class="px-4 py-3 border-b border-[var(--color-border)]">
-          <h2 class="text-sm font-semibold text-[var(--color-text)]">Heatmap de estudio (últimos 21 días)</h2>
+          <h2 class="text-sm font-semibold text-[var(--color-text)]">Heatmap de estudio ({{ rangeLabel }})</h2>
         </div>
 
         <div class="p-4 overflow-x-auto">
           <div v-if="!visualRows.length" class="text-xs text-[var(--color-text-muted)] italic">Sin datos de sesiones.</div>
-          <div v-else class="min-w-[760px]">
+          <div v-else :class="heatmapDays.length > 35 ? 'min-w-[980px]' : 'min-w-[760px]'">
             <div class="grid gap-1" :style="{ gridTemplateColumns: `180px repeat(${heatmapDays.length}, minmax(0, 1fr))` }">
               <div class="text-[10px] text-[var(--color-text-muted)]" />
               <div
@@ -147,7 +161,7 @@
       <!-- Plan vs real -->
       <div class="bg-[var(--color-surface)] border border-[var(--color-border)] rounded-xl overflow-hidden mb-6">
         <div class="px-4 py-3 border-b border-[var(--color-border)] flex items-center justify-between gap-3">
-          <h2 class="text-sm font-semibold text-[var(--color-text)]">Plan vs real acumulado</h2>
+          <h2 class="text-sm font-semibold text-[var(--color-text)]">Plan vs real acumulado ({{ rangeLabel }})</h2>
           <select
             v-model="trendSubjectId"
             class="text-xs bg-[var(--color-surface)] border border-[var(--color-border)] rounded-lg px-2 py-1 text-[var(--color-text)]"
@@ -202,7 +216,7 @@
             <div class="flex flex-wrap gap-4 text-xs mt-3">
               <span class="flex items-center gap-1 text-[var(--color-text-muted)]"><span class="w-2 h-2 rounded-full bg-[var(--color-primary)]" /> Plan</span>
               <span class="flex items-center gap-1 text-[var(--color-text-muted)]"><span class="w-2 h-2 rounded-full bg-[var(--color-success)]" /> Real</span>
-              <span class="text-[var(--color-text-muted)]">Últimas 6 semanas</span>
+              <span class="text-[var(--color-text-muted)]">{{ trendSeries.points.length }} periodos</span>
             </div>
 
             <div class="mt-2 grid grid-cols-3 sm:grid-cols-6 gap-2">
@@ -285,13 +299,13 @@
 
 <script setup lang="ts">
 import { ref, computed, onMounted, watch } from 'vue'
+import { useRouter } from 'vue-router'
 import { useSemesterStore } from '@/stores/semester'
 import { useTopicStore } from '@/stores/topic'
 import { studySessionCol, subjectCol } from '@/lib/collections'
 import type { Subject, StudySession } from '@/types'
 import {
   addDays,
-  addWeeks,
   eachWeekOfInterval,
   endOfWeek,
   format,
@@ -299,14 +313,17 @@ import {
   parseISO,
   startOfDay,
   startOfWeek,
+  subDays,
 } from 'date-fns'
 import { es } from 'date-fns/locale'
 
+const router = useRouter()
 const semesterStore = useSemesterStore()
 const topicStore = useTopicStore()
 
 const loading = ref(false)
 const selectedSemesterId = ref('')
+const rangePreset = ref<'7d' | '30d' | 'semester'>('30d')
 const sessionsBySubject = ref<Record<string, StudySession[]>>({})
 const semesterSubjects = ref<Subject[]>([])
 const trendSubjectId = ref('')
@@ -378,6 +395,28 @@ const selectedSemester = computed(() =>
   semesterStore.semesters.find((s) => s.$id === selectedSemesterId.value) ?? null
 )
 
+const rangeBounds = computed(() => {
+  const today = startOfDay(new Date())
+  if (rangePreset.value === '7d') {
+    return { start: subDays(today, 6), end: today }
+  }
+  if (rangePreset.value === '30d') {
+    return { start: subDays(today, 29), end: today }
+  }
+  if (selectedSemester.value) {
+    const start = startOfDay(parseISO(selectedSemester.value.start_date))
+    const end = startOfDay(parseISO(selectedSemester.value.end_date))
+    return { start, end: end < today ? end : today }
+  }
+  return { start: subDays(today, 29), end: today }
+})
+
+const rangeLabel = computed(() => {
+  if (rangePreset.value === '7d') return '7 días'
+  if (rangePreset.value === '30d') return '30 días'
+  return 'semestre'
+})
+
 function expectedProgressPct(): number {
   if (!selectedSemester.value) return 0
   const start = parseISO(selectedSemester.value.start_date)
@@ -420,9 +459,9 @@ const visualRows = computed(() => {
 })
 
 const heatmapDays = computed(() => {
-  const end = startOfDay(new Date())
-  const start = addDays(end, -20)
-  return Array.from({ length: 21 }, (_, i) => {
+  const { start, end } = rangeBounds.value
+  const total = Math.max(1, Math.round((end.getTime() - start.getTime()) / 86400000) + 1)
+  return Array.from({ length: total }, (_, i) => {
     const day = addDays(start, i)
     return {
       key: format(day, 'yyyy-MM-dd'),
@@ -469,13 +508,21 @@ function progressRingStyle(pct: number) {
   }
 }
 
+function openSubjectDetail(subjectId: string, riskLevel: 'ok' | 'warning' | 'risk') {
+  const status = riskLevel === 'ok' ? 'all' : 'open'
+  router.push({
+    name: 'subject-detail',
+    params: { id: subjectId },
+    query: { tab: 'topics', status },
+  })
+}
+
 const trendSeries = computed(() => {
   const subjectId = trendSubjectId.value
   if (!subjectId) return null
 
-  const now = new Date()
-  const firstWeek = startOfWeek(addWeeks(now, -5), { weekStartsOn: 1 })
-  const lastWeek = endOfWeek(now, { weekStartsOn: 1 })
+  const firstWeek = startOfWeek(rangeBounds.value.start, { weekStartsOn: 1 })
+  const lastWeek = endOfWeek(rangeBounds.value.end, { weekStartsOn: 1 })
   const weeks = eachWeekOfInterval({ start: firstWeek, end: lastWeek }, { weekStartsOn: 1 })
   if (!weeks.length) return null
 

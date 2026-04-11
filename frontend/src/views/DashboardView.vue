@@ -32,6 +32,7 @@
       <SubjectProgressList class="lg:col-span-2" />
       <div class="flex flex-col gap-4">
         <WeekSummary />
+        <SubjectVisualProgressWidget />
         <WeeklyGoalWidget @open-settings="showSemesters = true" />
       </div>
     </div>
@@ -100,7 +101,7 @@
                 </button>
                 <button
                   v-else
-                  @click="semesterStore.setActive(s.$id)"
+                  @click="activateSemester(s.$id)"
                   class="text-xs text-[var(--color-primary)] hover:underline shrink-0"
                 >
                   Activar
@@ -150,6 +151,7 @@ import SpacedReviewWidget from '@/components/dashboard/SpacedReviewWidget.vue'
 import InAppWeeklySummary from '@/components/dashboard/InAppWeeklySummary.vue'
 import SemesterForm from '@/components/semesters/SemesterForm.vue'
 import WeeklyGoalWidget from '@/components/dashboard/WeeklyGoalWidget.vue'
+import SubjectVisualProgressWidget from '@/components/dashboard/SubjectVisualProgressWidget.vue'
 
 const semesterStore = useSemesterStore()
 const subjectStore = useSubjectStore()
@@ -210,6 +212,13 @@ async function finishSemester(id: string) {
   if (!window.confirm('¿Seguro que quieres finalizar este semestre? Podrás reactivarlo después.')) return
   await semesterStore.archive(id)
   await Promise.all([semesterStore.fetchAll(), subjectStore.fetchActive()])
+}
+
+async function activateSemester(id: string) {
+  await semesterStore.setActive(id)
+  await subjectStore.fetchActive()
+  await Promise.all(subjectStore.subjects.map((subject) => topicStore.fetchBySubject(subject.$id)))
+  await Promise.all([plannerStore.fetchWeek(), sessionStore.fetchRecentDates()])
 }
 
 onMounted(async () => {
