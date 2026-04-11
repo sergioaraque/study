@@ -73,7 +73,7 @@ export function createApp(): Hono {
       method: c.req.method,
     })
 
-    return c.json(appError.toJSON(), appError.statusCode)
+    return c.json(appError.toJSON(), appError.statusCode as any)
   })
 
   return app
