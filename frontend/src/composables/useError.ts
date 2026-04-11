@@ -4,7 +4,7 @@
  */
 
 import { ref } from 'vue'
-import { AppError, parseApiError, ErrorMessages, ErrorCodes } from '@/lib/errors'
+import { AppError, parseApiError } from '@/lib/errors'
 import type { ErrorCode } from '@/lib/errors'
 
 interface UseErrorOptions {
