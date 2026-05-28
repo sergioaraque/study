@@ -9,10 +9,11 @@
 </template>
 
 <script setup lang="ts">
-import { ref, watch } from 'vue'
+import { ref, watch, defineAsyncComponent } from 'vue'
 import { useSubjectStore } from '@/stores/subject'
-import MarkdownEditor from '@/components/editor/MarkdownEditor.vue'
 import type { Subject } from '@/types'
+
+const MarkdownEditor = defineAsyncComponent(() => import('@/components/editor/MarkdownEditor.vue'))
 
 const props = defineProps<{ subject: Subject }>()
 const subjectStore = useSubjectStore()

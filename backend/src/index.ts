@@ -6,7 +6,7 @@ import { logger } from './lib/logger.js'
 import { config } from './config.js'
 
 const app = createApp()
-const port = parseInt(config.PORT)
+const port = config.PORT
 
 startScheduler()
 

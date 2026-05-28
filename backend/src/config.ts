@@ -1,7 +1,7 @@
 import { z } from 'zod'
 
 const envSchema = z.object({
-  PORT: z.string().default('3001'),
+  PORT: z.coerce.number().int().min(1).max(65535).default(3001),
   APPWRITE_ENDPOINT: z.string().url(),
   APPWRITE_PROJECT_ID: z.string().min(1),
   APPWRITE_API_KEY: z.string().min(1),

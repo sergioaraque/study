@@ -65,18 +65,19 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onMounted } from 'vue'
+import { ref, computed, onMounted, defineAsyncComponent } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { ChevronLeft, Pencil } from 'lucide-vue-next'
 import { useSubjectStore } from '@/stores/subject'
 import SubjectStatusBadge from '@/components/subjects/SubjectStatusBadge.vue'
-import SubjectForm from '@/components/subjects/SubjectForm.vue'
 import BaseSidepanel from '@/components/ui/BaseSidepanel.vue'
-import TopicsTab from '@/components/topics/TopicsTab.vue'
-import PecsTab from '@/components/pecs/PecsTab.vue'
-import ExamsTab from '@/components/exams/ExamsTab.vue'
-import NotesTab from '@/components/subjects/NotesTab.vue'
-import TutoringTab from '@/components/tutoring/TutoringTab.vue'
+
+const SubjectForm = defineAsyncComponent(() => import('@/components/subjects/SubjectForm.vue'))
+const TopicsTab = defineAsyncComponent(() => import('@/components/topics/TopicsTab.vue'))
+const PecsTab = defineAsyncComponent(() => import('@/components/pecs/PecsTab.vue'))
+const ExamsTab = defineAsyncComponent(() => import('@/components/exams/ExamsTab.vue'))
+const NotesTab = defineAsyncComponent(() => import('@/components/subjects/NotesTab.vue'))
+const TutoringTab = defineAsyncComponent(() => import('@/components/tutoring/TutoringTab.vue'))
 
 const route = useRoute()
 const router = useRouter()

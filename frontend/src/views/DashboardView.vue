@@ -141,15 +141,17 @@ import { subjectCol } from '@/lib/collections'
 import type { Semester, Subject } from '@/types'
 import UpcomingPecs from '@/components/dashboard/UpcomingPecs.vue'
 import UpcomingExams from '@/components/dashboard/UpcomingExams.vue'
-import SubjectProgressList from '@/components/dashboard/SubjectProgressList.vue'
+import { defineAsyncComponent } from 'vue'
+
+const SubjectProgressList = defineAsyncComponent(() => import('@/components/dashboard/SubjectProgressList.vue'))
 import WeekSummary from '@/components/dashboard/WeekSummary.vue'
-import StudyStreakCalendar from '@/components/dashboard/StudyStreakCalendar.vue'
-import WeeklyLoadChart from '@/components/dashboard/WeeklyLoadChart.vue'
+const StudyStreakCalendar = defineAsyncComponent(() => import('@/components/dashboard/StudyStreakCalendar.vue'))
+const WeeklyLoadChart = defineAsyncComponent(() => import('@/components/dashboard/WeeklyLoadChart.vue'))
 import PaceAlert from '@/components/dashboard/PaceAlert.vue'
-import SpacedReviewWidget from '@/components/dashboard/SpacedReviewWidget.vue'
-import InAppWeeklySummary from '@/components/dashboard/InAppWeeklySummary.vue'
+const SpacedReviewWidget = defineAsyncComponent(() => import('@/components/dashboard/SpacedReviewWidget.vue'))
+const InAppWeeklySummary = defineAsyncComponent(() => import('@/components/dashboard/InAppWeeklySummary.vue'))
 import SemesterForm from '@/components/semesters/SemesterForm.vue'
-import WeeklyGoalWidget from '@/components/dashboard/WeeklyGoalWidget.vue'
+const WeeklyGoalWidget = defineAsyncComponent(() => import('@/components/dashboard/WeeklyGoalWidget.vue'))
 
 const semesterStore = useSemesterStore()
 const subjectStore = useSubjectStore()

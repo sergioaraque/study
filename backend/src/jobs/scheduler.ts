@@ -4,13 +4,24 @@ import { runExamReminders } from './exam-reminders.js'
 import { logger } from '../lib/logger.js'
 
 let tasks: ScheduledTask[] = []
+let isRunningDailyJob = false
 
 export function startScheduler(): void {
   // Run every day at 08:00
   const dailyJob = schedule('0 8 * * *', async () => {
+    if (isRunningDailyJob) {
+      logger.warn('Daily reminder job skipped because previous run is still in progress')
+      return
+    }
+
+    isRunningDailyJob = true
     logger.info('Daily reminder job triggered')
-    await runPecReminders()
-    await runExamReminders()
+    try {
+      await runPecReminders()
+      await runExamReminders()
+    } finally {
+      isRunningDailyJob = false
+    }
   })
 
   tasks.push(dailyJob)

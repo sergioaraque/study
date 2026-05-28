@@ -204,10 +204,12 @@ import type { TutoringSession, WeeklySchedule } from '@/types'
 import { parseSchedule } from '@/stores/semester'
 import WeekColumn from '@/components/planner/WeekColumn.vue'
 import UnassignedPanel from '@/components/planner/UnassignedPanel.vue'
-import PlannerMonthView from '@/components/planner/PlannerMonthView.vue'
-import PlannerAgendaView from '@/components/planner/PlannerAgendaView.vue'
-import DayPanel from '@/components/planner/DayPanel.vue'
-import WeeklyScheduleEditor from '@/components/semesters/WeeklyScheduleEditor.vue'
+import { defineAsyncComponent } from 'vue'
+
+const PlannerMonthView = defineAsyncComponent(() => import('@/components/planner/PlannerMonthView.vue'))
+const PlannerAgendaView = defineAsyncComponent(() => import('@/components/planner/PlannerAgendaView.vue'))
+const DayPanel = defineAsyncComponent(() => import('@/components/planner/DayPanel.vue'))
+const WeeklyScheduleEditor = defineAsyncComponent(() => import('@/components/semesters/WeeklyScheduleEditor.vue'))
 
 const planner = usePlannerStore()
 const subjectStore = useSubjectStore()

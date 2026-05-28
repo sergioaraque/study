@@ -32,7 +32,7 @@
             </div>
           </div>
 
-          <p v-if="push.error.value" class="text-sm text-[var(--color-danger)]">{{ push.error.value }}</p>
+          <p v-if="push.error.value" class="text-sm text-[var(--color-danger)]">{{ push.error.value.message }}</p>
 
           <div v-if="push.subscribed.value" class="p-3 rounded-lg bg-[var(--color-success)]/5 border border-[var(--color-success)]/20 text-sm text-[var(--color-success)]">
             Las notificaciones están activas en este dispositivo. Recibirás avisos de PECs y exámenes según su configuración.

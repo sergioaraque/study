@@ -29,7 +29,20 @@ push.post('/subscribe', zValidator('json', subscribeSchema), async (c) => {
     )
 
     if (existing.total > 0) {
-      return c.json({ ok: true, message: 'Already subscribed' })
+      await databases.updateDocument(
+        config.APPWRITE_DATABASE_ID,
+        config.COL_PUSH_SUBSCRIPTIONS,
+        existing.documents[0].$id,
+        {
+          user_id: body.userId,
+          p256dh: body.p256dh,
+          auth: body.auth,
+          user_agent: body.userAgent ?? '',
+        }
+      )
+
+      logger.info('Push subscription updated', { userId: body.userId })
+      return c.json({ ok: true, message: 'Subscription updated' })
     }
 
     await databases.createDocument(
